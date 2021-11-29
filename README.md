@@ -8,7 +8,7 @@ Since it represented of distance matrix, it has symmetry image.
 
 ## CAM (Class Activation Mapping)
 ![img_1.png](img_1.png)  
-I've applied GMP(Global Max Pooling) for CNN architecture for visualize judgment criteria.
+I've applied GMP(Global Max Pooling) for CNN architecture to visualize judgment criteria.
 And then, perform weighted sum with between feature map before GMP and after GMP.
 
 # Improvements
