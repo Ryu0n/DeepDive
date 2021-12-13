@@ -56,7 +56,3 @@ class WineRecommender:
         df_image_lnk = df_image_lnk[df_image_lnk.WineName.isin(df_top_wine.WineName)][['WineName', 'ImageLink']]
 
         return df_top_wine, df_image_lnk
-
-
-df_top_wine, df_image_lnk = WineRecommender.recommend(50, 0, 80, 0, 10, 4)
-print(df_top_wine, df_image_lnk)

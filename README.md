@@ -15,7 +15,7 @@ WineRecommender class doesn't have to be initialized. It just has 'recommend' st
 Each parameters are need a value between 0 and 100. They are used to finding similar wines or cluster.
   
 * top  
-This parameter is a number that you want to get.
+This parameter is a number that you want to get the rows. (sort by ScoreCount and AvgScore descending)
   
 * threshold  
 This parameter is between 0 and 5 (`int` or `float`). It abandons the rows that has ratings score under threshold from wine dataframe.
@@ -45,9 +45,10 @@ This parameter is between 0 and 5 (`int` or `float`). It abandons the rows that 
 338  80.0000  37.5359   9.50501  23.97120        3  
 92   63.2534  19.0811  16.88510  10.33250        3  
 172  62.8807  16.7873  15.06190  10.37450        3  
-234  80.0000  30.6511  24.76990  15.16260        3                                                 WineName  \
+234  80.0000  30.6511  24.76990  15.16260        3    
 
 # df_image_lnk
+                                              WineName
 18                  COS Cerasuolo Di Vittoria Classico   
 19                                       Shafer Merlot   
 67                                    Pahlmeyer Merlot   
