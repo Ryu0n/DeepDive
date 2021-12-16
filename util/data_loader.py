@@ -28,6 +28,8 @@ class WineDatasetLoader(SingletonInstance):
 
     def __preprocessing(self):
         self._dataset.dropna(axis=0, inplace=True)
+        self._dataset.reset_index(inplace=True)
+        self._dataset.drop(columns='index', axis=1, inplace=True)
 
 
 class WineImageLoader(SingletonInstance):
@@ -36,7 +38,7 @@ class WineImageLoader(SingletonInstance):
 
     @property
     def dataset(self) -> pd.DataFrame:
-        return self._dataset
+        return self._dataset[['WineName', 'ImageLink']]
 
 
 class ReviewDatasetLoader(SingletonInstance):
