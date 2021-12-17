@@ -91,6 +91,3 @@ class WineRecommender:
             df_top_wine.iloc[r] = row
 
         return df_top_wine, df_image_lnk
-
-
-WineRecommender.recommend(80, 40, 80, 20)
