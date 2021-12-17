@@ -38,7 +38,7 @@ class WineRecommender:
         """
         def search_index(dataset, name):
             series = dataset.WineName.map(lambda n: name in n)
-            return series[series == True].index
+            return series[series==True].index
 
         wine_dataset = WineDatasetLoader.instance().dataset
         index_wine = search_index(wine_dataset, wine_name)
@@ -60,6 +60,14 @@ class WineRecommender:
         :param threshold: Cut-line of rating score.
         :return: dataframe of wines and image links
         """
+        def factors(df):
+            for r, row in enumerate(df.iloc):
+                yield r, np.array([[row.Light, row.Smooth, row.Dry, row.Soft]])
+
+        # scaling for cosine similarity.
+        def scaling(value):
+            return 50 * (value + 1)
+
         pd.set_option('display.max_columns', None)
         cluster = WineClusterer.instance().predict_cluster(light, smooth, dry, soft)[0]
         wine_dataset = WineDatasetLoader.instance().dataset
@@ -74,15 +82,15 @@ class WineRecommender:
         wine_img_dataset = WineImageLoader.instance().dataset
         df_image_lnk = wine_img_dataset[wine_img_dataset.WineName.isin(df_top_wine.WineName)]
 
-        def factors(df):
-            for r, row in enumerate(df.iloc):
-                yield r, np.array([[row.Light, row.Smooth, row.Dry, row.Soft]])
-
         pivot_vector = np.array([[light, smooth, dry, soft]])
-        df_top_wine['Similarity'] = np.NaN
+        df_top_wine['Similarity (%)'] = np.NaN
+
         for r, factor in factors(df_top_wine):
             row = list(df_top_wine.iloc[r].values)
-            row[-1] = cosine_similarity(pivot_vector, factor)
+            row[-1] = scaling(cosine_similarity(pivot_vector, factor))
             df_top_wine.iloc[r] = row
 
         return df_top_wine, df_image_lnk
+
+
+WineRecommender.recommend(80, 40, 80, 20)

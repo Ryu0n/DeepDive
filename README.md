@@ -48,19 +48,19 @@ This parameter is between 0 and 5 (`int` or `float`). It abandons the rows that 
 #### Return
 ```python
 # df_top_wine
-                                              WineName  AvgScore  ScoreCount  
-213         Zenato Amarone Della Valpolicella Classico       4.4       38621   
-326             Tormaresca Primitivo Salento Torcicoda       4.0       23453   
-144                            Domaine Bousquet Malbec       3.7       17970   
-119                 Tenuta Delle Terre Nere Etna Rosso       3.9       13666   
-104  Vigneti Del Vulture Aglianico Del Vulture Pian...       4.2       12971   
+                                              WineName  AvgScore  ScoreCount  \
+156         Zenato Amarone Della Valpolicella Classico       4.4       38621   
+233             Tormaresca Primitivo Salento Torcicoda       4.0       23453   
+109                            Domaine Bousquet Malbec       3.7       17970   
+87                  Tenuta Delle Terre Nere Etna Rosso       3.9       13666   
+76   Vigneti Del Vulture Aglianico Del Vulture Pian...       4.2       12971   
 
-       Light   Smooth      Dry     Soft  Cluster  Similarity  
-213  80.0000  20.9347  49.0026  20.0550        0    0.999957  
-326  64.3827  20.3368  37.0940  11.5043        0    0.996450  
-144  59.2256  24.6369  14.6889  33.2949        0    0.915605  
-119  71.6743  42.7492  20.0338  33.6724        0    0.912588  
-104  80.0000  39.2658  30.1710  22.0297        0    0.961557                                               WineName  \
+       Light   Smooth      Dry     Soft  Cluster  Similarity (%)  
+156  80.0000  20.9347  49.0026  20.0550        3       98.380543  
+233  64.3827  20.3368  37.0940  11.5043        3       98.342245  
+109  59.2256  24.6369  14.6889  33.2949        3       92.156378  
+87   71.6743  42.7492  20.0338  33.6724        3       93.331308  
+76   80.0000  39.2658  30.1710  22.0297        3       96.041589  
 
 # cluster : wine's cluster
 # Similarity : cosine similarity with input factors.
