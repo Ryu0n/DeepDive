@@ -1,0 +1,6 @@
+torch==1.4.0
+transformers==2.10.0
+seqeval>=0.0.12
+pytorch-crf==0.7.2
+fastapi==0.68.1
+uvicorn==0.15.0
