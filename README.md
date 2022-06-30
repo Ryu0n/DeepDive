@@ -5,6 +5,7 @@
 - 기존 KoBERT에 CRF(Conditional Random Field)를 붙인 커스텀 클래스 정의
 - monologg님의 KoBERT-NER를 커스터마이징
 - FastAPI를 사용하여 모델 로드
+- 모두의 말뭉치 (./data_preprocess) Fine-Tuning
 
 ## Dependencies
 - torch==1.4.0
