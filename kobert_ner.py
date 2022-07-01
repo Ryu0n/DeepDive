@@ -4,7 +4,7 @@ import torch
 import crf
 import torchcrf
 
-from utils import MODEL_CLASSES
+from utils.utils import MODEL_CLASSES
 
 
 def get_labels(args):
@@ -201,7 +201,9 @@ def load_kobert_crf(args):
     prefix = os.path.join(model_dir, model_class_name)
     pths = sorted(glob.glob(f'{prefix}*.pth'), reverse=True)
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    return torch.load(pths[0], map_location=device)
+    model = torch.load(pths[0], map_location=device)
+    print(model)
+    return model
 
 
 CUSTOM_MODEL_CLASSES = {

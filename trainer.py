@@ -10,7 +10,7 @@ from kobert_ner import save_kobert_crf, load_kobert_crf
 from kobert_ner import CUSTOM_MODEL_CLASSES
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from transformers import AdamW, get_linear_schedule_with_warmup
-from utils import compute_metrics, get_labels, get_test_texts, show_report, MODEL_CLASSES
+from utils.utils import compute_metrics, get_labels, get_test_texts, show_report, MODEL_CLASSES
 
 logger = logging.getLogger(__name__)
 

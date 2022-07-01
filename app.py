@@ -1,14 +1,9 @@
 import subprocess
-from typing import List
-from pydantic import BaseModel
+from dto import Sentences
 from fastapi import FastAPI
 
 
 app = FastAPI()
-
-
-class Sentences(BaseModel):
-    sentences: List[str]
 
 
 def input_sentences(sentences: Sentences):

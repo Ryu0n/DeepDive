@@ -1,14 +1,14 @@
 import os
 import logging
 import argparse
-from tqdm import tqdm, trange
+from tqdm import tqdm
 
 import numpy as np
 import torch
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 from transformers import AutoModelForTokenClassification
-from kobert_ner import CUSTOM_MODEL_CLASSES
-from utils import init_logger, load_tokenizer, get_labels
+from kobert_ner import CUSTOM_MODEL_CLASSES, load_kobert_crf
+from utils.utils import init_logger, load_tokenizer, get_labels
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,6 @@ def load_model(pred_config, args, device):
     if not os.path.exists(pred_config.model_dir):
         raise Exception("Model doesn't exists! Train first!")
 
-    from kobert_ner import CUSTOM_MODEL_CLASSES, load_kobert_crf
     if args.model_type in CUSTOM_MODEL_CLASSES.keys():
         model = load_kobert_crf(args)
         model.to(device)

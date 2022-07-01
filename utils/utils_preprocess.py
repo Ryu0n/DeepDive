@@ -3,8 +3,6 @@ import json
 
 from tqdm import tqdm
 from glob import glob
-from konlpy.tag import Okt
-from utils import load_tokenizer
 
 
 def _proj_dir():
@@ -66,7 +64,7 @@ def encoding_to_ner_tag(sentence_dict: dict):
 def encoding_json():
     for json_path in tqdm(reversed(get_json_paths('data_v1'))):
         txt_file_name = os.path.basename(json_path).replace('json', 'tsv')
-        txt_file_name = os.path.join('data_preprocess', txt_file_name)
+        txt_file_name = os.path.join('../data_preprocess', txt_file_name)
         file = open(txt_file_name, 'w')
         json_dict = load_json(json_path)
         documents = json_dict.get('document')
@@ -83,7 +81,7 @@ def encoding_json():
 
 
 def collect_labels():
-    txt_file_name = os.path.join('data_preprocess', 'label.txt')
+    txt_file_name = os.path.join('../data_preprocess', 'label.txt')
     file = open(txt_file_name, 'w')
 
     ne_set = set()
