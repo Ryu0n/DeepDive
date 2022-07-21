@@ -16,10 +16,13 @@ def collect_samples(num_samples=200):
       "sentences": []
     }
 
-    host = 'mongodb://k8s.mysterico.com/'
-    port = 31687
-    username = 'khan'
-    password = 'khanterico'
+    with open('secret.json') as f:
+        secret = json.load(f)
+        host = secret.get('host')
+        port = secret.get('port')
+        username = secret.get('username')
+        password = secret.get('password')
+
     client = MongoClient(host=host, port=port, username=username, password=password)
     db = client.get_database('social-monitor-prod')
     comments = db.get_collection('Comment')
@@ -131,8 +134,8 @@ def test_sns_okt_tokenizer(sentence: str, normalize: str = 'false'):
 if __name__ == "__main__":
     # sentence = "cj온마트"
     # sentence = '먹었어요'
-    sentence = "이물질 나와서 개빡치는데 개같네요 진짜로 곰표맥주 많다 차박객 2020년 3,000원 삼백오천만묶음 관리사무소 감바스 쉬림프"
+    # sentence = "이물질 나와서 개빡치는데 개같네요 진짜로 곰표맥주 많다 차박객 2020년 3,000원 삼백오천만묶음 관리사무소 감바스 쉬림프"
     # sentence = "근데 cj온마트인데 cj기프트카드로 결제가 안되는게 흠이네요."
-    test_sns_okt_tokenizer(sentence, 'false')
+    # test_sns_okt_tokenizer(sentence, 'false')
     # test_tokenizer(Okt(), sentence)
-    
+    pass

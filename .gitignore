@@ -140,3 +140,4 @@ cached*
 req_test.py
 sample_pred_in.txt
 sample_pred_out.txt
+secret.json
