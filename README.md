@@ -6,6 +6,7 @@
 - monologg님의 KoBERT-NER를 커스터마이징
 - FastAPI를 사용하여 모델 로드
 - 모두의 말뭉치 (./data_preprocess) Fine-Tuning
+- 토큰 단위 태깅 기능 추가 (형태소 분석기 품사 활용)
 
 ## Dependencies
 - torch==1.4.0
