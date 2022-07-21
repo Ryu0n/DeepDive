@@ -5,6 +5,9 @@ from tqdm import tqdm
 
 import numpy as np
 import torch
+from tokenizer_req import *
+from konlpy.tag import Okt, Mecab
+from pynori.korean_analyzer import KoreanAnalyzer
 from torch.utils.data import TensorDataset, DataLoader, SequentialSampler
 from transformers import AutoModelForTokenClassification
 from kobert_ner import CUSTOM_MODEL_CLASSES, load_kobert_crf
@@ -33,7 +36,8 @@ def load_model(pred_config, args, device):
         return model
 
     try:
-        model = AutoModelForTokenClassification.from_pretrained(args.model_dir)  # Config will be automatically loaded from model_dir
+        model = AutoModelForTokenClassification.from_pretrained(
+            args.model_dir)  # Config will be automatically loaded from model_dir
         model.to(device)
         model.eval()
         logger.info("***** Model Loaded *****")
@@ -171,7 +175,8 @@ def predict(pred_config):
                 preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
                 all_slot_label_mask = np.append(all_slot_label_mask, batch[3].detach().cpu().numpy(), axis=0)
 
-    preds = np.argmax(preds, axis=2) if preds.ndim > 2 else preds # batch_size, seq_length, nb_labels -> batch_size, seq_length
+    # batch_size, seq_length, nb_labels -> batch_size, seq_length
+    preds = np.argmax(preds, axis=2) if preds.ndim > 2 else preds
     slot_label_map = {i: label for i, label in enumerate(label_lst)}
     preds_list = [[] for _ in range(preds.shape[0])]
 
@@ -188,7 +193,53 @@ def predict(pred_config):
                 if pred == 'O':
                     line = line + word + " "
                 else:
-                    line = line + "[{}:{}] ".format(word, pred)
+                    # line = line + "[{}:{}] ".format(word, pred)  # Original code
+
+                    """OKT"""
+                    # pos, filter_pos, particles = local_okt(word)
+
+                    """Mecab"""
+                    # pos, select_pos, particles = local_nori(word)
+
+                    """Nori"""
+                    # pos, select_pos, particles = local_nori(word)
+
+                    """OKT REQ"""
+                    pos, filter_pos, particles = request_okt(word)
+
+                    """Nori REQ"""
+                    # pos, select_pos, particles = request_nori(word)
+
+                    words = []
+                    tokens = []
+
+                    # 띄어쓰기가 제대로 되지 않은 경우 (한 어절내에 여러 품사가 온 경우 - 조사 제외)
+                    if len(particles) > 0:
+
+                        for token, p in pos:
+                            if p in filter_pos:  # OKT Condition - p가 조사에 포함되는 경우
+                            # if p not in select_pos:  # Mecab, Nori Condition
+
+                                if len(tokens) > 0:  # 여태까지 수집된 토큰들 병합후 태깅
+                                    joined_token = ''.join(tokens)
+                                    words.append("[{}:{}]".format(joined_token, pred))
+                                    tokens.clear()
+
+                                words.append(token)
+                                continue
+
+                            tokens.append(token)
+
+                        if len(tokens) > 0:  # 남아있는 토큰들에 대한 처리
+                            joined_token = ''.join(tokens)
+                            words.append("[{}:{}]".format(joined_token, pred))
+                            tokens.clear()
+
+                        word = ''.join(words)
+                        line = line + f'{word} '
+
+                    else:
+                        line = line + "[{}:{}] ".format(word, pred)
 
             f.write("{}\n".format(line.strip()))
 

@@ -137,3 +137,6 @@ cached*
 /data_v2/
 /data_v1/
 /kobert_crf_model/
+req_test.py
+sample_pred_in.txt
+sample_pred_out.txt
