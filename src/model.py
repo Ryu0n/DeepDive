@@ -8,15 +8,6 @@ from transformers import BertTokenizer, BertForSequenceClassification, BertConfi
 model_name = 'bert-base-multilingual-cased'
 
 
-def tokenize_sentence_pair(tokenizer, sentence: str, token: str):
-    inputs = tokenizer.encode_plus(sentence, token,
-                                   return_tensors='pt',
-                                   max_length=512,
-                                   padding=True,
-                                   truncation=True)
-    return inputs
-
-
 class AspectTermExtractor(torch.nn.Module):
     """
     extract whether token is "related" or "unrelated".
@@ -54,29 +45,27 @@ class CombinedModel(torch.nn.Module):
         self.aspect_term_extractor = AspectTermExtractor()
         self.sentiment_classifier = SentimentClassifier()
 
-    def forward(self, sentence: str):
+    def get_tokens_in_sentence(self, sentence: str):
         tokenized_sentence = self.tokenizer.encode_plus(sentence)
-        print(tokenized_sentence)
         token_ids = tokenized_sentence.get('input_ids')
-        tokens = self.tokenizer.decode(token_ids)
+        tokens = [re.sub(' ', '', self.tokenizer.decode(token_id)) for token_id in token_ids]
+        tokens = [token for token in tokens if token not in self.tokenizer.special_tokens_map.values()]
+        return sentence, tokens
 
-        for token_id in token_ids:
-            print(token_id, token_ids)
+    def tokenize_by_pair(self, sentence: str, token: str):
+        inputs = self.tokenizer.encode_plus(sentence, token,
+                                            return_tensors='pt',
+                                            max_length=512,
+                                            padding=True,
+                                            truncation=True)
+        return inputs
 
-        print(self.tokenizer.get_vocab())
-
-        print(tokens)
-
-        # for token_id in token_ids:
-        #     token = self.tokenizer.decode(token_id)
-        #     token  = re.sub(' ', '', token)
-        #     print(token_id, token, self.tokenizer(token))
-
-        # for token_id in token_ids:
-        #     token = self.tokenizer.decode(token_id)
-        #     inputs = tokenize_sentence_pair(self.tokenizer, sentence, token)
-            # print(sentence, token)
-            # print(inputs, '\n')
+    def forward(self, sentence: str):
+        sentence, tokens = self.get_tokens_in_sentence(sentence)
+        for token in tokens:
+            inputs = self.tokenize_by_pair(sentence, token)
+            latent_vec, _ = self.aspect_term_extractor(**inputs)
+            is_entity = torch.argmax(latent_vec)
 
 
 if __name__ == "__main__":
