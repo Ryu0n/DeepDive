@@ -1,74 +1,70 @@
 """
 Reference : https://aclanthology.org/W19-6120.pdf#page10
 """
-import re
 import torch
-from transformers import BertTokenizer, BertForSequenceClassification, BertConfig
+from tqdm import tqdm
+from src.dataloader import read_text
+from torch.utils.data import DataLoader, Dataset
+from transformers import BertTokenizerFast, BertForTokenClassification, AdamW
+
 
 model_name = 'bert-base-multilingual-cased'
 
 
-class AspectTermExtractor(torch.nn.Module):
-    """
-    extract whether token is "related" or "unrelated".
-    """
+class SentimentalPolarityDataset(Dataset):
+    def __init__(self, extractor: bool):
+        self.extractor = extractor
+        self.data = {
+            'input_ids': [],
+            'attention_mask': [],
+            'token_type_ids': [],
+            'labels': []
+        }
+        self.tokenizer = BertTokenizerFast.from_pretrained(model_name)
+        self._load_from_text()
 
-    def __init__(self):
-        super().__init__()
-        self.config = BertConfig.from_pretrained(model_name,
-                                                 num_labels=2)  # related, unrelated
-        self.bert = BertForSequenceClassification.from_pretrained(model_name, config=self.config)
+    def _load_from_text(self):
+        for text, sentiments in read_text():
+            output = self.tokenizer.encode_plus(text, return_tensors='pt', padding='max_length')
+            for k, v in output.items():
+                v = torch.squeeze(v)
+                self.data.get(k).append(v)
+            sentiments = torch.squeeze(torch.tensor(sentiments, dtype=torch.long))
+            if self.extractor:
+                sentiments[sentiments > 0] = 1
+            self.data.get('labels').append(sentiments)
 
-    def forward(self, input_ids, attention_mask, token_type_ids):
-        outputs = self.bert(input_ids=input_ids,
-                            attention_mask=attention_mask,
-                            token_type_ids=token_type_ids)
-        logits, loss = outputs.logits, outputs.loss
-        return logits, loss
+    def __len__(self):
+        return len(self.data.get('labels'))
 
-
-class SentimentClassifier(torch.nn.Module):
-    """
-    extract sentimental expression of related aspect.
-    """
-    def __init__(self):
-        super().__init__()
-
-    def forward(self, inputs):
-        pass
+    def __getitem__(self, index):
+        return {k: v[index] for k, v in self.data.items()}
 
 
-class CombinedModel(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.tokenizer = BertTokenizer.from_pretrained(model_name)
-        self.aspect_term_extractor = AspectTermExtractor()
-        self.sentiment_classifier = SentimentClassifier()
+def train_aspect_term_extractor(epochs=5):
+    dataset = SentimentalPolarityDataset(extractor=True)
+    dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
+    model = BertForTokenClassification.from_pretrained(model_name, num_labels=2)
+    optim = AdamW(model.parameters(), lr=5e-6)
+    model.train()
 
-    def get_tokens_in_sentence(self, sentence: str):
-        tokenized_sentence = self.tokenizer.encode_plus(sentence)
-        token_ids = tokenized_sentence.get('input_ids')
-        tokens = [re.sub(' ', '', self.tokenizer.decode(token_id)) for token_id in token_ids]
-        tokens = [token for token in tokens if token not in self.tokenizer.special_tokens_map.values()]
-        return sentence, tokens
+    for epoch in range(epochs):
+        loop = tqdm(dataloader, leave=True)
+        for batch in loop:
+            optim.zero_grad()
+            outputs = model(**batch)
+            logits, loss = outputs.logits, outputs.loss
+            loss.backward()
+            optim.step()
+            loss_val = loss.item()
+            loop.set_description(f'Epoch {epoch}')
+            loop.set_postfix(loss=loss_val)
 
-    def tokenize_by_pair(self, sentence: str, token: str):
-        inputs = self.tokenizer.encode_plus(sentence, token,
-                                            return_tensors='pt',
-                                            max_length=512,
-                                            padding=True,
-                                            truncation=True)
-        return inputs
 
-    def forward(self, sentence: str):
-        sentence, tokens = self.get_tokens_in_sentence(sentence)
-        for token in tokens:
-            inputs = self.tokenize_by_pair(sentence, token)
-            latent_vec, _ = self.aspect_term_extractor(**inputs)
-            is_entity = torch.argmax(latent_vec)
+def train_aspect_sentimental_classifier():
+    pass
 
 
 if __name__ == "__main__":
-    sentence = '나는 사과를 먹었다.'
-    model = CombinedModel()
-    model(sentence)
+    train_aspect_term_extractor()
+
