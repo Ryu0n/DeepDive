@@ -41,15 +41,16 @@ class SentimentalPolarityDataset(Dataset):
         return {k: v[index] for k, v in self.data.items()}
 
 
-def train_aspect_term_extractor(epochs=5):
-    dataset = SentimentalPolarityDataset(extractor=True)
+def train_aspect_sentimental_classifier(epochs=5):
+    dataset = SentimentalPolarityDataset()
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
-    model = BertForTokenClassification.from_pretrained(model_name, num_labels=2)
+    model = BertForTokenClassification.from_pretrained(model_name, num_labels=4)
     optim = AdamW(model.parameters(), lr=5e-6)
     model.train()
 
     for epoch in range(epochs):
         loop = tqdm(dataloader, leave=True)
+        loss_val = None
         for batch in loop:
             optim.zero_grad()
             outputs = model(**batch)
@@ -59,12 +60,10 @@ def train_aspect_term_extractor(epochs=5):
             loss_val = loss.item()
             loop.set_description(f'Epoch {epoch}')
             loop.set_postfix(loss=loss_val)
-
-
-def train_aspect_sentimental_classifier():
-    pass
+        checkpoint = f'bert_token_cls_epoch_{epoch}_loss_{loss_val}.pt'
+        model.save_pretrained(checkpoint)
 
 
 if __name__ == "__main__":
-    train_aspect_term_extractor()
+    train_aspect_sentimental_classifier()
 
