@@ -64,7 +64,7 @@ def parse_element_tree(file_name: str):
     return rows
 
 
-def read_text(write=False):
+def read_train_text(write=False):
     file_name = 'ABSA16_Restaurants_Train_SB1_v2'
     rows = parse_element_tree(f'{file_name}.xml')
     with open(_get_xml_file(f'{file_name}.txt'), 'w') as f:
@@ -75,7 +75,17 @@ def read_text(write=False):
             yield text, sentiments
 
 
+def read_test_xml():
+    tree = _get_element_tree('EN_REST_SB1_TEST.xml')
+    root = tree.getroot()
+    for review in root:
+        sentences = review[0]
+        for sentence in sentences:
+            text = sentence[0].text
+            yield text
+
+
 if __name__ == "__main__":
-    for text, sentiments in read_text(write=True):
+    for text, sentiments in read_train_text(write=True):
         print(text, sentiments)
 
