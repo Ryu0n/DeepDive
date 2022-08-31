@@ -76,6 +76,6 @@ def read_text(write=False):
 
 
 if __name__ == "__main__":
-    for text, sentiments in read_text():
+    for text, sentiments in read_text(write=True):
         print(text, sentiments)
 

@@ -1,6 +1,7 @@
 """
 Reference : https://aclanthology.org/W19-6120.pdf#page10
 """
+import gc
 import torch
 from tqdm import tqdm
 from src.dataloader import read_text
@@ -9,6 +10,7 @@ from transformers import BertTokenizerFast, BertForTokenClassification, AdamW
 
 
 model_name = 'bert-base-multilingual-cased'
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 
 
 class SentimentalPolarityDataset(Dataset):
@@ -38,14 +40,16 @@ class SentimentalPolarityDataset(Dataset):
         return len(self.data.get('labels'))
 
     def __getitem__(self, index):
-        return {k: v[index] for k, v in self.data.items()}
+        return {k: v[index].to(device) for k, v in self.data.items()}
 
 
-def train_aspect_sentimental_classifier(epochs=5):
-    dataset = SentimentalPolarityDataset()
+def train_aspect_sentimental_classifier(epochs=5, extractor=False):
+    dataset = SentimentalPolarityDataset(extractor=extractor)
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
-    model = BertForTokenClassification.from_pretrained(model_name, num_labels=4)
+    num_labels = 2 if extractor else 4
+    model = BertForTokenClassification.from_pretrained(model_name, num_labels=num_labels)
     optim = AdamW(model.parameters(), lr=5e-6)
+    model.to(device)
     model.train()
 
     for epoch in range(epochs):
@@ -64,6 +68,12 @@ def train_aspect_sentimental_classifier(epochs=5):
         model.save_pretrained(checkpoint)
 
 
+def clear_gpu_memory():
+    gc.collect()
+    torch.cuda.empty_cache()
+
+
 if __name__ == "__main__":
+    clear_gpu_memory()
     train_aspect_sentimental_classifier()
 
