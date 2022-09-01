@@ -5,6 +5,7 @@ import gc
 import torch
 import numpy as np
 from tqdm import tqdm
+from collections import Counter
 from src.utils import polarity_map
 from src.en_dataloader import read_train_xml, read_test_xml
 from src.ko_dataloader import read_train_dataset, read_test_dataset
@@ -15,8 +16,8 @@ from transformers import BertTokenizerFast, BertForTokenClassification, AdamW
 model_name = 'bert-base-multilingual-cased'
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 source = {
-    'en': [read_train_xml, read_test_xml],
-    'ko': [read_train_dataset, read_test_dataset]
+    'en': [read_train_xml, read_test_xml, 'bert_token_cls_epoch_4_loss_0.06911052018404007.pt'],
+    'ko': [read_train_dataset, read_test_dataset, 'bert_token_cls_epoch_4_loss_0.07896306365728378.pt']
 }
 
 
@@ -75,7 +76,30 @@ def train_aspect_sentimental_classifier(epochs=5, extractor=False, lang='en'):
             loop.set_postfix(loss=loss_val)
         checkpoint = f'bert_token_cls_epoch_{epoch}_loss_{loss_val}.pt'
         model.save_pretrained(checkpoint)
-    
+
+
+def merge_tokens(filtered_tokens: np.ndarray, filtered_result: np.ndarray):
+
+    def extract_merger(start_idx: int, end_idx: int = None):
+        tokens = filtered_tokens[start_idx:end_idx]
+        sentiments = filtered_result[start_idx:end_idx]
+        sentiment = Counter(sentiments).most_common(n=1)
+        sentiment = sentiment[0][0] if len(sentiment) else None
+        merged_word = ''.join([token.replace('##', '') for token in tokens])
+        merged_word = None if merged_word == '' else merged_word
+        if None not in [merged_word, sentiment]:
+            print(merged_word, sentiment)
+
+    sep = [i for i, token in enumerate(filtered_tokens) if not token.startswith('##')]
+    last_idx = 0
+    for i, curr_idx in enumerate(sep[:-1]):
+        next_idx = sep[i+1]
+        last_idx = next_idx
+        extract_merger(start_idx=curr_idx, end_idx=next_idx)
+
+    # for remains
+    extract_merger(start_idx=last_idx)
+
         
 def evaluate_aspect_sentimental_classifier(model_path: str, lang='en'):
     model = BertForTokenClassification.from_pretrained(model_path)
@@ -92,12 +116,11 @@ def evaluate_aspect_sentimental_classifier(model_path: str, lang='en'):
         probs = torch.softmax(outputs.logits, dim=-1)
         result = torch.argmax(probs, dim=-1)[0]
         result = np.array(result)
-        filtered_tokens = tokens[(tokens != '[PAD]') & (result != 0)]
-        filtered_result = result[(tokens != '[PAD]') & (result != 0)]
+        filtered_tokens = tokens[(tokens != '[CLS]') & (tokens != '[UNK]') & (tokens != '[UNK]') & (tokens != '[PAD]') & (result != 0)]
+        filtered_result = result[(tokens != '[CLS]') & (tokens != '[UNK]') & (tokens != '[UNK]') & (tokens != '[PAD]') & (result != 0)]
         filtered_result = np.array(list(map(lambda elem: polarity_map_reverse.get(elem), filtered_result)))
         print('\n', sentence)
-        print(filtered_tokens)
-        print(filtered_result)
+        merge_tokens(filtered_tokens, filtered_result)
 
 
 def clear_gpu_memory():
@@ -106,11 +129,14 @@ def clear_gpu_memory():
 
 
 if __name__ == "__main__":
+    lang = 'ko'
+    clear_gpu_memory()
+
     # Fine-tuning
-    # clear_gpu_memory()
-    # train_aspect_sentimental_classifier(lang='ko')
+    # train_aspect_sentimental_classifier(lang='lang)
 
     # Evaluate
-    prefix = '../'
-    model_path = f'{prefix}bert_token_cls_epoch_4_loss_0.06911052018404007.pt'
-    evaluate_aspect_sentimental_classifier(model_path, lang='ko')
+    prefix = '..'
+    model_path = f'{prefix}/{source[lang][2]}'
+    print(model_path)
+    evaluate_aspect_sentimental_classifier(model_path, lang=lang)
