@@ -2,19 +2,12 @@ import os
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element
 from transformers import BertTokenizerFast
-
-
-polarity_map = {
-    'positive': 3,
-    'neutral': 2,
-    'negative': 1,
-    'unrelated': 0
-}
+from src.utils import polarity_map
 
 
 def _get_xml_file(file_name: str):
     cur_dir = os.path.abspath(os.curdir)
-    return os.path.join(cur_dir, f'../data/{file_name}')
+    return os.path.join(cur_dir, f'../en_data/{file_name}')
 
 
 def _get_element_tree(file_name: str):
@@ -51,20 +44,21 @@ def parse_element_tree(file_name: str):
                 sentiment = polarity_map.get('unrelated')
                 token_offset = tokenized_text_offsets[i]
 
-                for opinion in opinions:
-                    opinion: Element
-                    polarity = opinion.get('polarity')
-                    start = int(opinion.get('from'))
-                    end = int(opinion.get('to'))
-                    if start <= token_offset[0] < end:
-                        sentiment = polarity_map.get(polarity)
+                if token not in tokenizer.special_tokens_map.values():
+                    for opinion in opinions:
+                        opinion: Element
+                        polarity = opinion.get('polarity')
+                        start = int(opinion.get('from'))
+                        end = int(opinion.get('to'))
+                        if start <= token_offset[0] < end:
+                            sentiment = polarity_map.get(polarity)
 
                 sentiments.append(sentiment)
             rows.append([text, sentiments])
     return rows
 
 
-def read_train_text(write=False):
+def read_train_xml(write=True):
     file_name = 'ABSA16_Restaurants_Train_SB1_v2'
     rows = parse_element_tree(f'{file_name}.xml')
     with open(_get_xml_file(f'{file_name}.txt'), 'w') as f:
@@ -86,6 +80,6 @@ def read_test_xml():
 
 
 if __name__ == "__main__":
-    for text, sentiments in read_train_text(write=True):
+    for text, sentiments in read_train_xml(write=True):
         print(text, sentiments)
 

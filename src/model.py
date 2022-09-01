@@ -5,18 +5,25 @@ import gc
 import torch
 import numpy as np
 from tqdm import tqdm
-from src.dataloader import read_train_text, read_test_xml, polarity_map
+from src.utils import polarity_map
+from src.en_dataloader import read_train_xml, read_test_xml
+from src.ko_dataloader import read_train_dataset, read_test_dataset
 from torch.utils.data import DataLoader, Dataset
 from transformers import BertTokenizerFast, BertForTokenClassification, AdamW
 
 
 model_name = 'bert-base-multilingual-cased'
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
+source = {
+    'en': [read_train_xml, read_test_xml],
+    'ko': [read_train_dataset, read_test_dataset]
+}
 
 
 class SentimentalPolarityDataset(Dataset):
-    def __init__(self, extractor: bool):
+    def __init__(self, extractor: bool,  lang: str):
         self.extractor = extractor
+        self.lang = lang
         self.data = {
             'input_ids': [],
             'attention_mask': [],
@@ -27,7 +34,8 @@ class SentimentalPolarityDataset(Dataset):
         self._load_from_text()
 
     def _load_from_text(self):
-        for text, sentiments in read_train_text():
+        rows = source[self.lang][0]()
+        for text, sentiments in rows:
             output = self.tokenizer.encode_plus(text, return_tensors='pt', padding='max_length')
             for k, v in output.items():
                 v = torch.squeeze(v)
@@ -44,8 +52,8 @@ class SentimentalPolarityDataset(Dataset):
         return {k: v[index].to(device) for k, v in self.data.items()}
 
 
-def train_aspect_sentimental_classifier(epochs=5, extractor=False):
-    dataset = SentimentalPolarityDataset(extractor=extractor)
+def train_aspect_sentimental_classifier(epochs=5, extractor=False, lang='en'):
+    dataset = SentimentalPolarityDataset(extractor=extractor, lang=lang)
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
     num_labels = 2 if extractor else 4
     model = BertForTokenClassification.from_pretrained(model_name, num_labels=num_labels)
@@ -69,13 +77,13 @@ def train_aspect_sentimental_classifier(epochs=5, extractor=False):
         model.save_pretrained(checkpoint)
     
         
-def evaluate_aspect_sentimental_classifier(model_path: str):
+def evaluate_aspect_sentimental_classifier(model_path: str, lang='en'):
     model = BertForTokenClassification.from_pretrained(model_path)
     tokenizer = BertTokenizerFast.from_pretrained(model_name)
     vocab = tokenizer.get_vocab()
     vocab = {v: k for k, v in vocab.items()}
     polarity_map_reverse = {v: k for k, v in polarity_map.items()}
-    sentences = read_test_xml()
+    sentences = source[lang][1]()
     for sentence in sentences:
         inputs = tokenizer.encode_plus(sentence, return_tensors='pt', padding='max_length')
         input_ids = inputs.get('input_ids')
@@ -98,8 +106,11 @@ def clear_gpu_memory():
 
 
 if __name__ == "__main__":
+    # Fine-tuning
     # clear_gpu_memory()
-    # train_aspect_sentimental_classifier()
+    # train_aspect_sentimental_classifier(lang='ko')
+
+    # Evaluate
     prefix = '../'
     model_path = f'{prefix}bert_token_cls_epoch_4_loss_0.06911052018404007.pt'
-    evaluate_aspect_sentimental_classifier(model_path)
+    evaluate_aspect_sentimental_classifier(model_path, lang='ko')
