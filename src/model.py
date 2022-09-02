@@ -1,37 +1,43 @@
 """
 Reference : https://aclanthology.org/W19-6120.pdf#page10
 """
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+
 import gc
 import torch
+import argparse
 import numpy as np
 from tqdm import tqdm
 from collections import Counter
-from src.utils import polarity_map
+from src.utils import polarity_map, Arguments
 from src.en_dataloader import read_train_xml, read_test_xml
 from src.ko_dataloader import read_train_dataset, read_test_dataset
 from torch.utils.data import DataLoader, Dataset
 from transformers import BertTokenizerFast, BertForTokenClassification, AdamW
 
 
-model_name = 'bert-base-multilingual-cased'
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 source = {
-    'en': [read_train_xml, read_test_xml, 'bert_token_cls_epoch_4_loss_0.06911052018404007.pt'],
-    'ko': [read_train_dataset, read_test_dataset, 'bert_token_cls_epoch_4_loss_0.07896306365728378.pt']
+    'en': [read_train_xml, read_test_xml],
+    'ko': [read_train_dataset, read_test_dataset]
 }
 
 
 class SentimentalPolarityDataset(Dataset):
-    def __init__(self, extractor: bool,  lang: str):
+    def __init__(self, extractor: bool):
         self.extractor = extractor
-        self.lang = lang
+        self.lang = Arguments.instance().args.lang
+        self.model_path = Arguments.instance().args.model_path
+        self.tokenizer_name = Arguments.instance().args.tokenizer
         self.data = {
             'input_ids': [],
             'attention_mask': [],
             'token_type_ids': [],
             'labels': []
         }
-        self.tokenizer = BertTokenizerFast.from_pretrained(model_name)
+        self.tokenizer = BertTokenizerFast.from_pretrained(self.tokenizer_name)
         self._load_from_text()
 
     def _load_from_text(self):
@@ -53,14 +59,17 @@ class SentimentalPolarityDataset(Dataset):
         return {k: v[index].to(device) for k, v in self.data.items()}
 
 
-def train_aspect_sentimental_classifier(epochs=5, extractor=False, lang='en'):
-    dataset = SentimentalPolarityDataset(extractor=extractor, lang=lang)
+def train_aspect_sentimental_classifier(epochs=5, extractor=False):
+    lang = Arguments.instance().args.lang
+    model_path = Arguments.instance().args.model_path
+    dataset = SentimentalPolarityDataset(extractor=extractor)
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
     num_labels = 2 if extractor else 4
-    model = BertForTokenClassification.from_pretrained(model_name, num_labels=num_labels)
+    model = BertForTokenClassification.from_pretrained(model_path, num_labels=num_labels)
     optim = AdamW(model.parameters(), lr=5e-6)
     model.to(device)
     model.train()
+    lowest_loss, model_path = 99.0, None
 
     for epoch in range(epochs):
         loop = tqdm(dataloader, leave=True)
@@ -71,11 +80,15 @@ def train_aspect_sentimental_classifier(epochs=5, extractor=False, lang='en'):
             logits, loss = outputs.logits, outputs.loss
             loss.backward()
             optim.step()
-            loss_val = loss.item()
+            loss_val = round(loss.item(), 3)
             loop.set_description(f'Epoch {epoch}')
             loop.set_postfix(loss=loss_val)
-        checkpoint = f'bert_token_cls_epoch_{epoch}_loss_{loss_val}.pt'
+        checkpoint = f'{lang}_bert_token_cls_epoch_{epoch}_loss_{loss_val}.pt'
+        if loss_val < lowest_loss:
+            model_path = checkpoint
+            lowest_loss = loss_val
         model.save_pretrained(checkpoint)
+    Arguments.instance().args.model_path = model_path
 
 
 def merge_tokens(filtered_tokens: np.ndarray, filtered_result: np.ndarray):
@@ -97,13 +110,16 @@ def merge_tokens(filtered_tokens: np.ndarray, filtered_result: np.ndarray):
         last_idx = next_idx
         extract_merger(start_idx=curr_idx, end_idx=next_idx)
 
-    # for remains
+    # for remainder
     extract_merger(start_idx=last_idx)
 
         
-def evaluate_aspect_sentimental_classifier(model_path: str, lang='en'):
+def evaluate_aspect_sentimental_classifier():
+    lang = Arguments.instance().args.lang
+    model_path = Arguments.instance().args.model_path
+    tokenizer_name = Arguments.instance().args.tokenizer
     model = BertForTokenClassification.from_pretrained(model_path)
-    tokenizer = BertTokenizerFast.from_pretrained(model_name)
+    tokenizer = BertTokenizerFast.from_pretrained(tokenizer_name)
     vocab = tokenizer.get_vocab()
     vocab = {v: k for k, v in vocab.items()}
     polarity_map_reverse = {v: k for k, v in polarity_map.items()}
@@ -116,8 +132,8 @@ def evaluate_aspect_sentimental_classifier(model_path: str, lang='en'):
         probs = torch.softmax(outputs.logits, dim=-1)
         result = torch.argmax(probs, dim=-1)[0]
         result = np.array(result)
-        filtered_tokens = tokens[(tokens != '[CLS]') & (tokens != '[UNK]') & (tokens != '[UNK]') & (tokens != '[PAD]') & (result != 0)]
-        filtered_result = result[(tokens != '[CLS]') & (tokens != '[UNK]') & (tokens != '[UNK]') & (tokens != '[PAD]') & (result != 0)]
+        filtered_tokens = tokens[(tokens != '[CLS]') & (tokens != '[UNK]') & (tokens != '[SEP]') & (tokens != '[PAD]') & (result != 0)]
+        filtered_result = result[(tokens != '[CLS]') & (tokens != '[UNK]') & (tokens != '[SEP]') & (tokens != '[PAD]') & (result != 0)]
         filtered_result = np.array(list(map(lambda elem: polarity_map_reverse.get(elem), filtered_result)))
         print('\n', sentence)
         merge_tokens(filtered_tokens, filtered_result)
@@ -129,14 +145,23 @@ def clear_gpu_memory():
 
 
 if __name__ == "__main__":
-    lang = 'ko'
     clear_gpu_memory()
 
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--train', required=True)
+    parser.add_argument('--eval', required=True, help='if --eval is True, you must pass --model_path')
+    parser.add_argument('--lang', required=False, default='en')
+    parser.add_argument('--model_path', required=False, default=None)
+    parser.add_argument('--tokenizer', required=True)
+
+    args = parser.parse_args()
+    args = Arguments.instance(args)
+
     # Fine-tuning
-    # train_aspect_sentimental_classifier(lang='lang)
+    if args.args.train:
+        train_aspect_sentimental_classifier()
 
     # Evaluate
-    prefix = '..'
-    model_path = f'{prefix}/{source[lang][2]}'
-    print(model_path)
-    evaluate_aspect_sentimental_classifier(model_path, lang=lang)
+    if args.args.eval and args.args.model_path:
+        evaluate_aspect_sentimental_classifier()

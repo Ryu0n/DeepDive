@@ -2,12 +2,14 @@ import os
 import json
 import random
 from transformers import BertTokenizerFast
+
+from src.utils import Arguments
 from src.utils import polarity_map
 
 
 def _get_json_file(file_name: str):
     cur_dir = os.path.abspath(os.curdir)
-    return os.path.join(cur_dir, f'../ko_data/{file_name}')
+    return os.path.join(cur_dir, f'ko_data/{file_name}')
 
 
 def _load_json_dict(file_name: str):
@@ -17,7 +19,8 @@ def _load_json_dict(file_name: str):
 
 
 def parse_json_dict(file_name: str):
-    tokenizer = BertTokenizerFast.from_pretrained('bert-base-multilingual-cased')
+    tokenizer_name = Arguments.instance().args.tokenizer
+    tokenizer = BertTokenizerFast.from_pretrained(tokenizer_name)
     vocab = tokenizer.get_vocab()
     vocab = {v: k for k, v in vocab.items()}
     json_dict = _load_json_dict(file_name)
@@ -57,11 +60,17 @@ def train_test_split(rows: list, train_ratio: float):
     return train_rows, test_rows
 
 
-def down_sampling(rows: list):
+def down_sampling(rows: list, ratio=1):
+    """
+    Deal with imbalance problem.
+    :param rows:
+    :param ratio: multiple of smaller label count
+    :return:
+    """
     negative, positive = map(lambda polarity: polarity_map.get(polarity), ['negative', 'positive'])
     negative_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if negative in sentiments]
     positive_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if positive in sentiments and negative not in sentiments]
-    num_negative, num_positive = len(negative_rows), len(positive_rows)
+    num_negative, num_positive = int(len(negative_rows) * ratio), len(positive_rows)
     if num_positive < num_negative:
         negative_rows, positive_rows = positive_rows, negative_rows
     down_sampled_rows = []
@@ -75,7 +84,7 @@ def down_sampling(rows: list):
 def read_train_dataset(write=True, train_ratio=0.8):
     file_name = 'sample2'
     rows = parse_json_dict(file_name+'.json')
-    rows = down_sampling(rows)
+    rows = down_sampling(rows, 1.2)
     train_rows, test_rows = train_test_split(rows, train_ratio)
 
     # save test text

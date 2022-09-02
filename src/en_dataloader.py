@@ -2,12 +2,14 @@ import os
 import xml.etree.ElementTree as ET
 from xml.etree.ElementTree import Element
 from transformers import BertTokenizerFast
+
+from src.utils import Arguments
 from src.utils import polarity_map
 
 
 def _get_xml_file(file_name: str):
     cur_dir = os.path.abspath(os.curdir)
-    return os.path.join(cur_dir, f'../en_data/{file_name}')
+    return os.path.join(cur_dir, f'en_data/{file_name}')
 
 
 def _get_element_tree(file_name: str):
@@ -17,7 +19,8 @@ def _get_element_tree(file_name: str):
 
 
 def parse_element_tree(file_name: str):
-    tokenizer = BertTokenizerFast.from_pretrained('bert-base-multilingual-cased')
+    tokenizer_name = Arguments.instance().args.tokenizer
+    tokenizer = BertTokenizerFast.from_pretrained(tokenizer_name)
     vocab = tokenizer.get_vocab()
     vocab = {v: k for k, v in vocab.items()}
     tree = _get_element_tree(file_name)
