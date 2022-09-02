@@ -1,5 +1,6 @@
 import os
 import json
+import random
 from transformers import BertTokenizerFast
 from src.utils import polarity_map
 
@@ -56,9 +57,25 @@ def train_test_split(rows: list, train_ratio: float):
     return train_rows, test_rows
 
 
+def down_sampling(rows: list):
+    negative, positive = map(lambda polarity: polarity_map.get(polarity), ['negative', 'positive'])
+    negative_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if negative in sentiments]
+    positive_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if positive in sentiments and negative not in sentiments]
+    num_negative, num_positive = len(negative_rows), len(positive_rows)
+    if num_positive < num_negative:
+        negative_rows, positive_rows = positive_rows, negative_rows
+    down_sampled_rows = []
+    for _ in range(num_negative):
+        random_idx = random.randint(0, len(positive_rows)-1)
+        down_sampled_rows.append(positive_rows.pop(random_idx))
+    down_sampled_rows.extend(negative_rows)
+    return down_sampled_rows
+
+
 def read_train_dataset(write=True, train_ratio=0.8):
     file_name = 'sample2'
     rows = parse_json_dict(file_name+'.json')
+    rows = down_sampling(rows)
     train_rows, test_rows = train_test_split(rows, train_ratio)
 
     # save test text
