@@ -62,6 +62,7 @@ class SentimentalPolarityDataset(Dataset):
 def train_aspect_sentimental_classifier(epochs=5, extractor=False):
     lang = Arguments.instance().args.lang
     model_path = Arguments.instance().args.model_path
+    model_path = 'bert-base-multilingual-cased' if model_path is None else model_path
     dataset = SentimentalPolarityDataset(extractor=extractor)
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
     num_labels = 2 if extractor else 4
