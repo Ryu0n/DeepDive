@@ -4,8 +4,6 @@ Reference : https://aclanthology.org/W19-6120.pdf#page10
 import os
 import sys
 
-from sklearn.preprocessing import MultiLabelBinarizer
-
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import gc
@@ -18,8 +16,9 @@ from sklearn.metrics import f1_score
 from src.utils import polarity_map, Arguments
 from src.en_dataloader import read_train_xml, read_test_xml
 from src.ko_dataloader import read_train_dataset, read_test_dataset
+from sklearn.preprocessing import MultiLabelBinarizer
 from torch.utils.data import DataLoader, Dataset
-from transformers import BertTokenizerFast, BertForTokenClassification, AdamW
+from transformers import AdamW
 
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -33,6 +32,8 @@ class SentimentalPolarityDataset(Dataset):
     def __init__(self, extractor: bool):
         self.extractor = extractor
         self.lang = Arguments.instance().args.lang
+        self.model_class = Arguments.instance().model_class
+        self.tokenizer_class = Arguments.instance().tokenizer_class
         self.model_path = Arguments.instance().args.model_path
         self.tokenizer_name = Arguments.instance().args.tokenizer
         self.data = {
@@ -41,7 +42,7 @@ class SentimentalPolarityDataset(Dataset):
             'token_type_ids': [],
             'labels': []
         }
-        self.tokenizer = BertTokenizerFast.from_pretrained(self.tokenizer_name)
+        self.tokenizer = self.tokenizer_class.from_pretrained(self.tokenizer_name)
         self._load_from_text()
 
     def _load_from_text(self):
@@ -68,10 +69,11 @@ def train_aspect_sentimental_classifier(epochs=5, extractor=False):
     model_path = Arguments.instance().args.model_path
     tokenizer_name = Arguments.instance().args.tokenizer
     model_path = tokenizer_name if model_path is None else model_path
+    model_class = Arguments.instance().model_class
     dataset = SentimentalPolarityDataset(extractor=extractor)
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
     num_labels = 2 if extractor else 4
-    model = BertForTokenClassification.from_pretrained(model_path, num_labels=num_labels)
+    model = model_class.from_pretrained(model_path, num_labels=num_labels)
     optim = AdamW(model.parameters(), lr=5e-6)
     model.to(device)
     model.train()
@@ -89,7 +91,12 @@ def train_aspect_sentimental_classifier(epochs=5, extractor=False):
             loss_val = round(loss.item(), 3)
             loop.set_description(f'Epoch {epoch}')
             loop.set_postfix(loss=loss_val)
-        checkpoint = f'{lang}_bert_token_cls_epoch_{epoch}_loss_{loss_val}.pt'
+        m = ''
+        if 'bert' in tokenizer_name:
+            m = 'bert'
+        elif 'electra' in tokenizer_name:
+            m = 'electra'
+        checkpoint = f'{lang}_{m}_token_cls_epoch_{epoch}_loss_{loss_val}.pt'
         if loss_val < lowest_loss:
             model_path = checkpoint
             lowest_loss = loss_val
@@ -124,8 +131,10 @@ def evaluate_aspect_sentimental_classifier():
     lang = Arguments.instance().args.lang
     model_path = Arguments.instance().args.model_path
     tokenizer_name = Arguments.instance().args.tokenizer
-    model = BertForTokenClassification.from_pretrained(model_path)
-    tokenizer = BertTokenizerFast.from_pretrained(tokenizer_name)
+    model_class = Arguments.instance().model_class
+    tokenizer_class = Arguments.instance().tokenizer_class
+    model = model_class.from_pretrained(model_path)
+    tokenizer = tokenizer_class.from_pretrained(tokenizer_name)
     vocab = tokenizer.get_vocab()
     vocab = {v: k for k, v in vocab.items()}
     polarity_map_reverse = {v: k for k, v in polarity_map.items()}

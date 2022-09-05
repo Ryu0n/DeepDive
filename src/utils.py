@@ -26,3 +26,8 @@ class Arguments(SingletonInstance):
         self.args = args
         self.args.train = True if self.args.train == 'True' else False
         self.args.eval = True if self.args.eval == 'True' else False
+        self.tokenizer_class = PLM_CLASSES.get(self.args.tokenizer)[0]
+        if 'bert' in self.args.tokenizer:
+            self.model_class = BertForTokenClassification
+        elif 'electra' in self.args.tokenizer:
+            self.model_class = ElectraForTokenClassification

@@ -19,6 +19,7 @@ def _load_json_dict(file_name: str):
 
 
 def parse_json_dict(file_name: str):
+    tokenizer_class = Arguments.instance().tokenizer_class
     tokenizer_name = Arguments.instance().args.tokenizer
     tokenizer = BertTokenizerFast.from_pretrained(tokenizer_name)
     vocab = tokenizer.get_vocab()
