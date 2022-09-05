@@ -21,7 +21,7 @@ def _load_json_dict(file_name: str):
 def parse_json_dict(file_name: str):
     tokenizer_class = Arguments.instance().tokenizer_class
     tokenizer_name = Arguments.instance().args.tokenizer
-    tokenizer = BertTokenizerFast.from_pretrained(tokenizer_name)
+    tokenizer = tokenizer_class.from_pretrained(tokenizer_name)
     vocab = tokenizer.get_vocab()
     vocab = {v: k for k, v in vocab.items()}
     json_dict = _load_json_dict(file_name)
