@@ -10,6 +10,11 @@ polarity_map = {
     'unrelated': 0
 }
 
+is_entity = {
+    'negative': 0,
+    'positive': 1
+}
+
 PLM_CLASSES = {
     'bert-base-multilingual-cased': [BertTokenizerFast, BertForTokenClassification],
     'monologg/koelectra-base-v3-discriminator': [ElectraTokenizerFast, ElectraForTokenClassification]

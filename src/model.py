@@ -3,6 +3,9 @@ Reference : https://aclanthology.org/W19-6120.pdf#page10
 """
 import os
 import sys
+
+from sklearn.preprocessing import MultiLabelBinarizer
+
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import gc
@@ -11,6 +14,7 @@ import argparse
 import numpy as np
 from tqdm import tqdm
 from collections import Counter
+from sklearn.metrics import f1_score
 from src.utils import polarity_map, Arguments
 from src.en_dataloader import read_train_xml, read_test_xml
 from src.ko_dataloader import read_train_dataset, read_test_dataset
@@ -126,7 +130,11 @@ def evaluate_aspect_sentimental_classifier():
     vocab = {v: k for k, v in vocab.items()}
     polarity_map_reverse = {v: k for k, v in polarity_map.items()}
     sentences = source[lang][1]()
+    pred_sentiments, true_sentiments = [], []
     for sentence in sentences:
+        if lang == 'ko':
+            sentence, sentiments = sentence
+            true_sentiments.append(sentiments)
         inputs = tokenizer.encode_plus(sentence, return_tensors='pt', padding='max_length')
         input_ids = inputs.get('input_ids')
         tokens = np.array([vocab.get(int(input_id)) for input_id in input_ids[0]])
@@ -134,11 +142,20 @@ def evaluate_aspect_sentimental_classifier():
         probs = torch.softmax(outputs.logits, dim=-1)
         result = torch.argmax(probs, dim=-1)[0]
         result = np.array(result)
+        pred_sentiments.append(result)
         filtered_tokens = tokens[(tokens != '[CLS]') & (tokens != '[UNK]') & (tokens != '[SEP]') & (tokens != '[PAD]') & (result != 0)]
         filtered_result = result[(tokens != '[CLS]') & (tokens != '[UNK]') & (tokens != '[SEP]') & (tokens != '[PAD]') & (result != 0)]
         filtered_result = np.array(list(map(lambda elem: polarity_map_reverse.get(elem), filtered_result)))
         print('\n', sentence)
         merge_tokens(filtered_tokens, filtered_result)
+
+    pred_sentiments = np.array(pred_sentiments)
+    true_sentiments = np.array(true_sentiments)
+
+    # https://stackoverflow.com/questions/33326704/scikit-learn-calculate-f1-in-multilabel-classification
+    m = MultiLabelBinarizer().fit(true_sentiments)
+    f1 = f1_score(m.transform(true_sentiments), m.transform(pred_sentiments), average='macro')
+    print('f1 score : ', f1)
 
 
 def clear_gpu_memory():

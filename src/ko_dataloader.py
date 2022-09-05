@@ -125,7 +125,7 @@ def read_test_dataset():
             sentence_text, sentiments = line.split('\t')
             sentiments = sentiments.split(' ')
             sentiments = list(map(int, sentiments))
-            yield sentence_text
+            yield sentence_text, sentiments
 
 
 if __name__ == "__main__":
