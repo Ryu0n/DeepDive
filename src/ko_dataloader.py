@@ -67,24 +67,46 @@ def down_sampling(rows: list, ratio=1):
     :param ratio: multiple of smaller label count
     :return:
     """
-    negative, positive = map(lambda polarity: polarity_map.get(polarity), ['negative', 'positive'])
+    unrelated, negative, neutral, positive = map(lambda polarity: polarity_map.get(polarity), ['unrelated', 'negative', 'neutral', 'positive'])
     negative_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if negative in sentiments]
-    positive_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if positive in sentiments and negative not in sentiments]
+    positive_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if positive in sentiments]
+    neutral_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if neutral in sentiments]
+    unrelated_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows
+                      if negative not in sentiments and
+                      positive not in sentiments and
+                      neutral not in sentiments]
+
     num_negative, num_positive = int(len(negative_rows) * ratio), len(positive_rows)
     if num_positive < num_negative:
         negative_rows, positive_rows = positive_rows, negative_rows
-    down_sampled_rows = []
+
+    down_sampled_rows = dict()
     for _ in range(num_negative):
-        random_idx = random.randint(0, len(positive_rows)-1)
-        down_sampled_rows.append(positive_rows.pop(random_idx))
-    down_sampled_rows.extend(negative_rows)
+        if len(positive_rows):
+            random_idx = random.randint(0, len(positive_rows)-1)
+            random_positive = positive_rows.pop(random_idx)
+            down_sampled_rows[random_positive[0]] = random_positive
+        if len(neutral_rows):
+            random_idx = random.randint(0, len(neutral_rows)-1)
+            random_neutral = neutral_rows.pop(random_idx)
+            down_sampled_rows[random_neutral[0]] = random_neutral
+        if len(unrelated_rows):
+            random_idx = random.randint(0, len(unrelated_rows)-1)
+            random_unrelated = unrelated_rows.pop(random_idx)
+            down_sampled_rows[random_unrelated[0]] = random_unrelated
+
+    for negative_row in negative_rows:
+        down_sampled_rows[negative_row[0]] = negative_row
+
+    down_sampled_rows = list(down_sampled_rows.values())
+    random.shuffle(down_sampled_rows)
     return down_sampled_rows
 
 
 def read_train_dataset(write=True, train_ratio=0.8):
     file_name = 'sample2'
     rows = parse_json_dict(file_name+'.json')
-    rows = down_sampling(rows, 1.2)
+    rows = down_sampling(rows)
     train_rows, test_rows = train_test_split(rows, train_ratio)
 
     # save test text
