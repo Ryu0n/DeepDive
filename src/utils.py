@@ -15,6 +15,7 @@ PLM_CLASSES = {
     'monologg/koelectra-base-v3-discriminator': [ElectraTokenizerFast, ElectraForTokenClassification]
 }
 
+
 class Arguments(SingletonInstance):
     def __init__(self, args):
         self.args = args

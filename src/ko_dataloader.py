@@ -67,14 +67,10 @@ def down_sampling(rows: list, ratio=1):
     :param ratio: multiple of smaller label count
     :return:
     """
-    unrelated, negative, neutral, positive = map(lambda polarity: polarity_map.get(polarity), ['unrelated', 'negative', 'neutral', 'positive'])
+    negative, neutral, positive = map(lambda polarity: polarity_map.get(polarity), ['negative', 'neutral', 'positive'])
     negative_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if negative in sentiments]
     positive_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if positive in sentiments]
     neutral_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if neutral in sentiments]
-    unrelated_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows
-                      if negative not in sentiments and
-                      positive not in sentiments and
-                      neutral not in sentiments]
 
     num_negative, num_positive = int(len(negative_rows) * ratio), len(positive_rows)
     if num_positive < num_negative:
@@ -90,10 +86,6 @@ def down_sampling(rows: list, ratio=1):
             random_idx = random.randint(0, len(neutral_rows)-1)
             random_neutral = neutral_rows.pop(random_idx)
             down_sampled_rows[random_neutral[0]] = random_neutral
-        if len(unrelated_rows):
-            random_idx = random.randint(0, len(unrelated_rows)-1)
-            random_unrelated = unrelated_rows.pop(random_idx)
-            down_sampled_rows[random_unrelated[0]] = random_unrelated
 
     for negative_row in negative_rows:
         down_sampled_rows[negative_row[0]] = negative_row
@@ -103,10 +95,11 @@ def down_sampling(rows: list, ratio=1):
     return down_sampled_rows
 
 
-def read_train_dataset(write=True, train_ratio=0.8):
+def read_train_dataset(write=True, train_ratio=0.8, extractor=False):
     file_name = 'sample2'
     rows = parse_json_dict(file_name+'.json')
-    rows = down_sampling(rows)
+    if not extractor:
+        rows = down_sampling(rows)
     train_rows, test_rows = train_test_split(rows, train_ratio)
 
     # save test text
