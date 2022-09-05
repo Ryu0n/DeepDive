@@ -162,9 +162,10 @@ def evaluate_aspect_sentimental_classifier():
     true_sentiments = np.array(true_sentiments)
 
     # https://stackoverflow.com/questions/33326704/scikit-learn-calculate-f1-in-multilabel-classification
-    m = MultiLabelBinarizer().fit(true_sentiments)
-    f1 = f1_score(m.transform(true_sentiments), m.transform(pred_sentiments), average='macro')
-    print('f1 score : ', f1)
+    if lang == 'ko':
+        m = MultiLabelBinarizer().fit(true_sentiments)
+        f1 = f1_score(m.transform(true_sentiments), m.transform(pred_sentiments), average='macro')
+        print('f1 score : ', f1)
 
 
 def clear_gpu_memory():
