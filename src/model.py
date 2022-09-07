@@ -13,7 +13,7 @@ import numpy as np
 from tqdm import tqdm
 from collections import Counter
 from sklearn.metrics import f1_score
-from src.utils import polarity_map, Arguments
+from src.utils import polarity_map, Arguments, is_entity
 from src.en_dataloader import read_train_xml, read_test_xml
 from src.ko_dataloader import read_train_dataset, read_test_dataset
 from sklearn.preprocessing import MultiLabelBinarizer
@@ -127,7 +127,7 @@ def merge_tokens(filtered_tokens: np.ndarray, filtered_result: np.ndarray):
     extract_merger(start_idx=last_idx)
 
         
-def evaluate_aspect_sentimental_classifier():
+def evaluate_aspect_sentimental_classifier(extractor=False):
     lang = Arguments.instance().args.lang
     model_path = Arguments.instance().args.model_path
     tokenizer_name = Arguments.instance().args.tokenizer
@@ -137,12 +137,15 @@ def evaluate_aspect_sentimental_classifier():
     tokenizer = tokenizer_class.from_pretrained(tokenizer_name)
     vocab = tokenizer.get_vocab()
     vocab = {v: k for k, v in vocab.items()}
-    polarity_map_reverse = {v: k for k, v in polarity_map.items()}
+    m = polarity_map if extractor else is_entity
+    polarity_map_reverse = {v: k for k, v in m.items()}
     sentences = source[lang][1]()
     pred_sentiments, true_sentiments = [], []
     for sentence in sentences:
         if lang == 'ko':
             sentence, sentiments = sentence
+            if extractor:
+                sentiments = list(map(lambda sentiment: 1 if sentiment > 0 else 0, sentiments))
             true_sentiments.append(sentiments)
         inputs = tokenizer.encode_plus(sentence, return_tensors='pt', padding='max_length')
         input_ids = inputs.get('input_ids')
@@ -183,14 +186,15 @@ if __name__ == "__main__":
     parser.add_argument('--lang', required=False, default='en')
     parser.add_argument('--model_path', required=False, default=None)
     parser.add_argument('--tokenizer', required=True)
+    parser.add_argument('--extractor', required=True)
 
     args = parser.parse_args()
     args = Arguments.instance(args)
 
     # Fine-tuning
     if args.args.train:
-        train_aspect_sentimental_classifier()
+        train_aspect_sentimental_classifier(extractor=args.args.extractor)
 
     # Evaluate
     if args.args.eval and args.args.model_path:
-        evaluate_aspect_sentimental_classifier()
+        evaluate_aspect_sentimental_classifier(extractor=args.args.extractor)
