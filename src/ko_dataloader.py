@@ -23,7 +23,7 @@ def parse_json_dict(file_name: str):
     tokenizer_name = Arguments.instance().args.tokenizer
     tokenizer = tokenizer_class.from_pretrained(tokenizer_name)
     vocab = tokenizer.get_vocab()
-    vocab = {v: k for k, v in vocab.items()}
+    vocab = {v: k for k, v in vocab.items()}  # id : word
     json_dict = _load_json_dict(file_name)
     documents = json_dict.get('document')
     rows = []
@@ -49,6 +49,8 @@ def parse_json_dict(file_name: str):
                         end = int(opinion.get('end'))
                         if start <= token_offset[0] < end:
                             sentiment = polarity_map.get(polarity)
+                else:
+                    sentiment = -100  # ignore Cross-Entropy loss
 
                 sentiments.append(sentiment)
             rows.append([sentence_text, sentiments])
