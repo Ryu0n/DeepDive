@@ -1,8 +1,8 @@
 import os
 import json
 import random
+import torch.nn as nn
 from transformers import BertTokenizerFast
-
 from src.utils import Arguments
 from src.utils import polarity_map
 
@@ -50,7 +50,7 @@ def parse_json_dict(file_name: str):
                         if start <= token_offset[0] < end:
                             sentiment = polarity_map.get(polarity)
                 else:
-                    sentiment = -100  # ignore Cross-Entropy loss
+                    sentiment = nn.CrossEntropyLoss().ignore_index  # -100
 
                 sentiments.append(sentiment)
             rows.append([sentence_text, sentiments])
@@ -98,11 +98,16 @@ def down_sampling(rows: list, ratio=1):
     return down_sampled_rows
 
 
+def down_sampling_v2(rows: list):
+    rows = [[sentence_text, sentiments] for sentence_text, sentiments in rows if 1 in sentiments or 2 in sentiments or 3 in sentiments]
+    return rows
+
+
 def read_train_dataset(write=True, train_ratio=0.8, extractor=False):
     file_name = 'sample2'
     rows = parse_json_dict(file_name+'.json')
     if not extractor:
-        rows = down_sampling(rows)
+        rows = down_sampling_v2(rows)
     train_rows, test_rows = train_test_split(rows, train_ratio)
 
     # save test text

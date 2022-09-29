@@ -74,7 +74,7 @@ def train_aspect_sentimental_classifier(epochs=5, extractor=False):
     dataloader = DataLoader(dataset, batch_size=16, shuffle=True)
     num_labels = 2 if extractor else 4
     model = model_class.from_pretrained(model_path, num_labels=num_labels)
-    optim = AdamW(model.parameters(), lr=5e-6)
+    optim = AdamW(model.parameters(), lr=2e-5)
     model.to(device)
     model.train()
     lowest_loss, model_path = 99.0, None
@@ -82,13 +82,15 @@ def train_aspect_sentimental_classifier(epochs=5, extractor=False):
     for epoch in range(epochs):
         loop = tqdm(dataloader, leave=True)
         loss_val = None
+        total_loss = 0
         for batch in loop:
             optim.zero_grad()
             outputs = model(**batch)
-            logits, loss = outputs.logits, outputs.loss
+            loss = outputs.loss
             loss.backward()
             optim.step()
             loss_val = round(loss.item(), 3)
+            total_loss += loss_val
             loop.set_description(f'Epoch {epoch}')
             loop.set_postfix(loss=loss_val)
         m = ''
@@ -96,8 +98,9 @@ def train_aspect_sentimental_classifier(epochs=5, extractor=False):
             m = 'bert'
         elif 'electra' in tokenizer_name:
             m = 'electra'
-        checkpoint = f'{lang}_{m}_token_cls_epoch_{epoch}_loss_{loss_val}.pt'
-        if loss_val < lowest_loss:
+        avg_train_loss = total_loss / len(dataloader)
+        checkpoint = f'{lang}_{m}_token_cls_epoch_{epoch}_loss_{avg_train_loss}.pt'
+        if avg_train_loss < lowest_loss:
             model_path = checkpoint
             lowest_loss = loss_val
         model.save_pretrained(checkpoint)
