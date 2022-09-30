@@ -46,7 +46,7 @@ class SentimentalPolarityDataset(Dataset):
         self._load_from_text()
 
     def _load_from_text(self):
-        rows = source[self.lang][0](extractor=self.extractor)
+        rows = source[self.lang][0]()
         for text, sentiments in rows:
             output = self.tokenizer.encode_plus(text, return_tensors='pt', padding='max_length')
             for k, v in output.items():

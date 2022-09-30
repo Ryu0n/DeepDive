@@ -103,11 +103,10 @@ def down_sampling_v2(rows: list):
     return rows
 
 
-def read_train_dataset(write=True, train_ratio=0.8, extractor=False):
+def read_train_dataset(write=True, train_ratio=0.8):
     file_name = 'sample2'
     rows = parse_json_dict(file_name+'.json')
-    if not extractor:
-        rows = down_sampling_v2(rows)
+    rows = down_sampling_v2(rows)
     train_rows, test_rows = train_test_split(rows, train_ratio)
 
     # save test text

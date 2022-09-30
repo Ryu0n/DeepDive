@@ -55,6 +55,8 @@ def parse_element_tree(file_name: str):
                         end = int(opinion.get('to'))
                         if start <= token_offset[0] < end:
                             sentiment = polarity_map.get(polarity)
+                else:
+                    sentiment = -100
 
                 sentiments.append(sentiment)
             rows.append([text, sentiments])
