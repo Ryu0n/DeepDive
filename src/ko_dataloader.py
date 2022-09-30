@@ -99,12 +99,20 @@ def down_sampling(rows: list, ratio=1):
 
 
 def down_sampling_v2(rows: list):
+    sampled_rows = []
     rows = [[sentence_text, sentiments] for sentence_text, sentiments in rows if 1 in sentiments or 2 in sentiments or 3 in sentiments]
-    return rows
+    for sentence_text, sentiments in rows:
+        total_sentiments = sum([sentiments.count(sent) for sent in [0, 1, 2, 3]])
+        num_unrelated = sentiments.count(0)
+        unrelated_ratio = num_unrelated / total_sentiments
+        if unrelated_ratio > 0.7:
+            continue
+        sampled_rows.append([sentence_text, sentiments])
+    return sampled_rows
 
 
 def read_train_dataset(write=True, train_ratio=0.8):
-    file_name = 'sample2'
+    file_name = 'sample'
     rows = parse_json_dict(file_name+'.json')
     rows = down_sampling_v2(rows)
     train_rows, test_rows = train_test_split(rows, train_ratio)
@@ -126,7 +134,7 @@ def read_train_dataset(write=True, train_ratio=0.8):
 
 
 def read_test_dataset():
-    with open(_get_json_file('sample2_test.txt'), 'r') as f:
+    with open(_get_json_file('sample_test.txt'), 'r') as f:
         lines = f.readlines()
         for line in lines:
             sentence_text, sentiments = line.split('\t')

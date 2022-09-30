@@ -1,8 +1,7 @@
 pytorch_model.bin
 config.json
-sample1.json
-sample2.json
-sample2_*
+*.json
+*.txt
 .idea
 .DS_Store
 __pycache__
