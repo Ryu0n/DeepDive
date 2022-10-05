@@ -10,10 +10,6 @@ polarity_map = {
     'unrelated': 0
 }
 
-is_entity = {
-    'negative': 0,
-    'positive': 1
-}
 
 PLM_CLASSES = {
     'bert-base-multilingual-cased': [BertTokenizerFast, BertForTokenClassification],
@@ -26,7 +22,6 @@ class Arguments(SingletonInstance):
         self.args = args
         self.args.train = True if self.args.train == 'True' else False
         self.args.eval = True if self.args.eval == 'True' else False
-        self.args.extractor = True if self.args.extractor == 'True' else False
         self.tokenizer_class = PLM_CLASSES.get(self.args.tokenizer)[0]
         if 'bert' in self.args.tokenizer:
             self.model_class = BertForTokenClassification

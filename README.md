@@ -10,7 +10,7 @@
 Run this command in `ABSA` directory.  
 
 ```
-python src/model.py --train=[bool] --eval=[bool] --lang=[str] --model_path=[str] --tokenizer=[str] --extractor=[bool]
+python src/model.py --train=[bool] --eval=[bool] --lang=[str] --model_path=[str] --tokenizer=[str]
 ```  
 
 - `--train` : `True` or `False` / REQUIRED  
@@ -18,7 +18,6 @@ python src/model.py --train=[bool] --eval=[bool] --lang=[str] --model_path=[str]
 - `--lang` : `en` or `ko` / OPTION  
 - `--model_path` : checkpoint path / OPTION (REQUIRED WHEN `--train` is `False` and `--eval` is `True`)  
 - `--tokenizer` : tokenizer name in huggingface (correspond to model class) / `bert-base-multilingual-cased` / REQUIRED
-- `--extractor` : `True` or `False` / either ATE(Aspect Term Extractor) or Sentimental Classifier (num of classes 2 or 4)
 
 ## Future Work
 - Wrapping with docker for comfortable

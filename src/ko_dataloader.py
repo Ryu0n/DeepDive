@@ -2,7 +2,6 @@ import os
 import json
 import random
 import torch.nn as nn
-from transformers import BertTokenizerFast
 from src.utils import Arguments
 from src.utils import polarity_map
 
