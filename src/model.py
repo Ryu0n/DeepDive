@@ -104,25 +104,23 @@ def train_aspect_sentimental_classifier(epochs=5):
 
 
 def merge_tokens(filtered_tokens: np.ndarray, filtered_result: np.ndarray):
-    def extract_merger(start_idx: int, end_idx: int = None):
-        tokens = filtered_tokens[start_idx:end_idx]
-        sentiments = filtered_result[start_idx:end_idx]
-        sentiment = Counter(sentiments).most_common(n=1)
-        sentiment = sentiment[0][0] if len(sentiment) else None
-        merged_word = ''.join([token.replace('##', '') for token in tokens])
-        merged_word = None if merged_word == '' else merged_word
-        if None not in [merged_word, sentiment]:
-            print(merged_word, sentiment)
+    filtered_tokens, filtered_result = list(filtered_tokens), list(filtered_result)
+    result_token, result_sentiment = [], []
 
-    sep = [i for i, token in enumerate(filtered_tokens) if not token.startswith('##')]
-    last_idx = 0
-    for i, curr_idx in enumerate(sep[:-1]):
-        next_idx = sep[i + 1]
-        last_idx = next_idx
-        extract_merger(start_idx=curr_idx, end_idx=next_idx)
+    while filtered_tokens:
+        curr_token: str = filtered_tokens.pop(0)
+        curr_sentiment: str = filtered_result.pop(0)
+        if not curr_token.startswith('##'):
+            result_token.append(curr_token)
+            result_sentiment.append([curr_sentiment])
+        elif result_token:
+            result_token[-1] += curr_token.replace('##', '')
+            result_sentiment[-1].append(curr_sentiment)
 
-    # for remainder
-    extract_merger(start_idx=last_idx)
+    result_sentiment = map(lambda sentiment: Counter(sentiment).most_common(n=1)[0][0], result_sentiment)
+
+    for token, sentiment in zip(result_token, result_sentiment):
+        print(token, sentiment)
 
 
 def post_process(true_sentiments: np.ndarray, pred_sentiments: np.ndarray):
