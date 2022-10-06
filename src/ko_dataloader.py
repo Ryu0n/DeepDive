@@ -62,42 +62,7 @@ def train_test_split(rows: list, train_ratio: float):
     return train_rows, test_rows
 
 
-def down_sampling(rows: list, ratio=1):
-    """
-    Deal with imbalance problem.
-    :param rows:
-    :param ratio: multiple of smaller label count
-    :return:
-    """
-    negative, neutral, positive = map(lambda polarity: polarity_map.get(polarity), ['negative', 'neutral', 'positive'])
-    negative_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if negative in sentiments]
-    positive_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if positive in sentiments]
-    neutral_rows = [(sentence_text, sentiments) for sentence_text, sentiments in rows if neutral in sentiments]
-
-    num_negative, num_positive = int(len(negative_rows) * ratio), len(positive_rows)
-    if num_positive < num_negative:
-        negative_rows, positive_rows = positive_rows, negative_rows
-
-    down_sampled_rows = dict()
-    for _ in range(num_negative):
-        if len(positive_rows):
-            random_idx = random.randint(0, len(positive_rows)-1)
-            random_positive = positive_rows.pop(random_idx)
-            down_sampled_rows[random_positive[0]] = random_positive
-        if len(neutral_rows):
-            random_idx = random.randint(0, len(neutral_rows)-1)
-            random_neutral = neutral_rows.pop(random_idx)
-            down_sampled_rows[random_neutral[0]] = random_neutral
-
-    for negative_row in negative_rows:
-        down_sampled_rows[negative_row[0]] = negative_row
-
-    down_sampled_rows = list(down_sampled_rows.values())
-    random.shuffle(down_sampled_rows)
-    return down_sampled_rows
-
-
-def down_sampling_v2(rows: list):
+def down_sampling(rows: list):
     sampled_rows = []
     rows = [[sentence_text, sentiments] for sentence_text, sentiments in rows if 1 in sentiments or 2 in sentiments or 3 in sentiments]
     for sentence_text, sentiments in rows:
@@ -113,8 +78,8 @@ def down_sampling_v2(rows: list):
 def read_train_dataset(write=True, train_ratio=0.8):
     file_name = 'sample'
     rows = parse_json_dict(file_name+'.json')
-    rows = down_sampling_v2(rows)
     train_rows, test_rows = train_test_split(rows, train_ratio)
+    train_rows = down_sampling(train_rows)
 
     # save test text
     if write:

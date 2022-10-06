@@ -19,7 +19,6 @@ from src.ko_dataloader import read_train_dataset, read_test_dataset
 from torch.utils.data import DataLoader, Dataset
 from transformers import AdamW
 
-
 polarity_map_reverse = {v: k for k, v in polarity_map.items()}
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 source = {
@@ -106,7 +105,7 @@ def train_aspect_sentimental_classifier(epochs=5):
 def merge_tokens(filtered_tokens: np.ndarray, filtered_result: np.ndarray):
     filtered_tokens, filtered_result = list(filtered_tokens), list(filtered_result)
     splited_tokens, splited_sentiments = [], []
-    
+
     # split subword tokens by word
     # 서브워드 토큰들을 단어 단위로 나눔
     while filtered_tokens:
@@ -146,15 +145,14 @@ def merge_tokens(filtered_tokens: np.ndarray, filtered_result: np.ndarray):
 
 
 def post_process(true_sentiments: np.ndarray, pred_sentiments: np.ndarray):
-
     def map_to_polarity_str(filtered_sentiments: np.ndarray):
         return np.array([
-            ['_'+polarity_map_reverse.get(s) for s in sentiment]
+            ['_' + polarity_map_reverse.get(s) for s in sentiment]
             for sentiment in filtered_sentiments
         ])
 
     filtered_true_sentiments = np.array(
-         [sentiment[sentiment != -100]
+        [sentiment[sentiment != -100]
          for sentiment in true_sentiments]
     )
     filtered_pred_sentiments = np.array(
@@ -198,13 +196,13 @@ def evaluate_aspect_sentimental_classifier():
                 & (tokens != '[UNK]')
                 & (tokens != '[SEP]')
                 & (tokens != '[PAD]')
-            ]
+                ]
             filtered_result = result[
                 (tokens != '[CLS]')
                 & (tokens != '[UNK]')
                 & (tokens != '[SEP]')
                 & (tokens != '[PAD]')
-            ]
+                ]
 
             print('\n', sentence)
             merge_tokens(filtered_tokens, filtered_result)
