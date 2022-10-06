@@ -105,29 +105,51 @@ def train_aspect_sentimental_classifier(epochs=5):
 
 def merge_tokens(filtered_tokens: np.ndarray, filtered_result: np.ndarray):
     filtered_tokens, filtered_result = list(filtered_tokens), list(filtered_result)
-    result_token, result_sentiment = [], []
-
+    splited_tokens, splited_sentiments = [], []
+    
+    # split subword tokens by word
+    # 서브워드 토큰들을 단어 단위로 나눔
     while filtered_tokens:
         curr_token: str = filtered_tokens.pop(0)
         curr_sentiment: str = filtered_result.pop(0)
         if not curr_token.startswith('##'):
-            result_token.append(curr_token)
-            result_sentiment.append([curr_sentiment])
-        elif result_token:
-            result_token[-1] += curr_token.replace('##', '')
-            result_sentiment[-1].append(curr_sentiment)
+            # Start of subwords
+            splited_tokens.append([curr_token])
+            splited_sentiments.append([curr_sentiment])
+        elif splited_tokens:
+            # Intermediate of subwords
+            splited_tokens[-1].append(curr_token)
+            splited_sentiments[-1].append(curr_sentiment)
 
-    result_sentiment = map(lambda sentiment: Counter(sentiment).most_common(n=1)[0][0], result_sentiment)
+    # post process for intermediate subword tokens
+    # 중간에서 감정이 존재하는 서브워드 토큰들을 제외
+    sanitized_tokens, sanitized_sentiments = [], []
+    for tokens, sentiments in zip(splited_tokens, splited_sentiments):
+        is_not_unrelated = True
+        for token, sentiment in zip(tokens, sentiments):
+            if sentiment == 'unrelated':
+                is_not_unrelated = False
+            if is_not_unrelated is False:
+                continue
+            if not token.startswith('##'):
+                sanitized_tokens.append(token)
+                sanitized_sentiments.append([sentiment])
+            else:
+                sanitized_tokens[-1] += token.replace('##', '')
+                sanitized_sentiments[-1].append(sentiment)
 
-    for token, sentiment in zip(result_token, result_sentiment):
-        print(token, sentiment)
+    sanitized_sentiments = map(lambda sentiment: Counter(sentiment).most_common(n=1)[0][0], sanitized_sentiments)
+
+    for token, sentiment in zip(sanitized_tokens, sanitized_sentiments):
+        if sentiment != 'unrelated':
+            print(token, sentiment)
 
 
 def post_process(true_sentiments: np.ndarray, pred_sentiments: np.ndarray):
 
     def map_to_polarity_str(filtered_sentiments: np.ndarray):
         return np.array([
-            ['_'+polarity_map_reverse.get(s) for s in sentiment]
+            ['_'+polarity_map_reverse.get(sanitized_sentiments) for sanitized_sentiments in sentiment]
             for sentiment in filtered_sentiments
         ])
 
@@ -136,7 +158,7 @@ def post_process(true_sentiments: np.ndarray, pred_sentiments: np.ndarray):
          for sentiment in true_sentiments]
     )
     filtered_pred_sentiments = np.array(
-        [np.array([p for t, p in zip(true_sentiment, pred_sentiment) if t != -100])
+        [np.array([p for sanitized_tokens, p in zip(true_sentiment, pred_sentiment) if sanitized_tokens != -100])
          for true_sentiment, pred_sentiment, in zip(true_sentiments, pred_sentiments)]
     )
 
@@ -168,13 +190,22 @@ def evaluate_aspect_sentimental_classifier():
             probs = torch.softmax(outputs.logits, dim=-1)
             result = np.array(torch.argmax(probs, dim=-1)[0])
             pred_sentiments.append(result)
+            result = np.array(list(map(lambda elem: polarity_map_reverse.get(elem), result)))
 
             # Display results in string
             filtered_tokens = tokens[
-                (tokens != '[CLS]') & (tokens != '[UNK]') & (tokens != '[SEP]') & (tokens != '[PAD]') & (result != 0)]
+                (tokens != '[CLS]')
+                & (tokens != '[UNK]')
+                & (tokens != '[SEP]')
+                & (tokens != '[PAD]')
+            ]
             filtered_result = result[
-                (tokens != '[CLS]') & (tokens != '[UNK]') & (tokens != '[SEP]') & (tokens != '[PAD]') & (result != 0)]
-            filtered_result = np.array(list(map(lambda elem: polarity_map_reverse.get(elem), filtered_result)))
+                (tokens != '[CLS]')
+                & (tokens != '[UNK]')
+                & (tokens != '[SEP]')
+                & (tokens != '[PAD]')
+            ]
+
             print('\n', sentence)
             merge_tokens(filtered_tokens, filtered_result)
 
