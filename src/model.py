@@ -149,7 +149,7 @@ def post_process(true_sentiments: np.ndarray, pred_sentiments: np.ndarray):
 
     def map_to_polarity_str(filtered_sentiments: np.ndarray):
         return np.array([
-            ['_'+polarity_map_reverse.get(sanitized_sentiments) for sanitized_sentiments in sentiment]
+            ['_'+polarity_map_reverse.get(s) for s in sentiment]
             for sentiment in filtered_sentiments
         ])
 
@@ -158,7 +158,7 @@ def post_process(true_sentiments: np.ndarray, pred_sentiments: np.ndarray):
          for sentiment in true_sentiments]
     )
     filtered_pred_sentiments = np.array(
-        [np.array([p for sanitized_tokens, p in zip(true_sentiment, pred_sentiment) if sanitized_tokens != -100])
+        [np.array([p for t, p in zip(true_sentiment, pred_sentiment) if t != -100])
          for true_sentiment, pred_sentiment, in zip(true_sentiments, pred_sentiments)]
     )
 
