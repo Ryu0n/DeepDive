@@ -18,7 +18,3 @@ def reduce_by_tsne(images, n_components=2):
     images = flatten_images(images)
     tsne = TSNE(n_components=n_components)
     return tsne.fit_transform(images)
-
-
-class AEReducer:
-    pass

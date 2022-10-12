@@ -26,17 +26,16 @@ if __name__ == "__main__":
     np.set_printoptions(threshold=sys.maxsize)
     img_paths, images = get_images()
 
-    # 차원축소 1. 아무것도 적용하지 않음
+    # 1. Nothing to apply
     images = flatten_images(images)
-    print(images.shape)
 
-    # 차원축소 2. PCA 적용
+    # 2. PCA
     # images = reduce_by_pca(images)
 
-    # 차원 축소 3. t-SNE
-    images = reduce_by_tsne(images)
+    # 3. t-SNE
+    # images = reduce_by_tsne(images)
 
-    # 클러스터링 1. K-Means clustering
+    # 1. K-Means clustering
     result = KMeans(n_clusters=2).fit_predict(images)
 
     visualize_clustering_result(img_paths, result)
