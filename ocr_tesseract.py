@@ -19,7 +19,6 @@ if __name__ == "__main__":
     img_paths, images = get_images(num_images_per_dir=1, rescaled_pixels=800)
     for image in images:
         text = text_extract(image)
-        # text = re.sub('[]', '', text)
         if text:
             print('\n', '='*30)
             print(text)

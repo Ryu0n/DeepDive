@@ -4,3 +4,4 @@ secret.json
 cache.json
 label.json
 .DS_Store
+__pycache__
