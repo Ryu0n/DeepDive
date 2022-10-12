@@ -1,5 +1,6 @@
 import os
 import json
+import glob
 from tqdm import tqdm
 import boto3
 
@@ -20,7 +21,7 @@ def s3_resource(secret):
     return s3
 
 
-def download_images(s3, secret):
+def download_images(s3, secret, limit=100):
     img_path = './images'
     if not os.path.exists(img_path):
         os.mkdir(img_path)
@@ -32,6 +33,8 @@ def download_images(s3, secret):
         dir_name = os.path.dirname(file_name)
         if not os.path.exists(dir_name):
             os.makedirs(dir_name, exist_ok=True)
+        if len(glob.glob(dir_name + '/*')) > limit:
+            continue
         if not os.path.isdir(file_name):
             bucket.download_file(
                 Key=key_dir,
