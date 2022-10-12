@@ -7,6 +7,8 @@
   - execute `preprocess.py`. It will create `cache.py` that contains information about sampled images from whole datasets.
 - Label data 
   - execute `labelilng.py`. You can label image manually.
+- Model training & evaluation
+  - execute `model.py`. It will save models' checkpoints per every epochs.
 
 ## Misc.  
 
