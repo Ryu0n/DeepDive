@@ -59,7 +59,7 @@ def show_random_images():
     plt.show()
 
 
-def get_images(num_images_per_dir=10, scaling=True, rescaled_pixels=400):
+def get_images(scaling=True, rescaled_pixels=400):
     """
 
     :return: images shape -> (n_samples, width, height, channels)
@@ -68,7 +68,7 @@ def get_images(num_images_per_dir=10, scaling=True, rescaled_pixels=400):
     image_map = read_image_map()
     import tqdm
     for dirname in tqdm.tqdm(image_map.keys()):
-        for basename in image_map.get(dirname)[:num_images_per_dir]:
+        for basename in image_map.get(dirname):
             img_path = dirname + '/' + basename
             img_paths.append(img_path)
             img = Image.open(img_path)
@@ -81,6 +81,6 @@ def get_images(num_images_per_dir=10, scaling=True, rescaled_pixels=400):
 
 
 if __name__ == "__main__":
-    image_map = get_image_map(limit=100)
+    image_map = get_image_map()
     write_image_map(image_map)
     # show_random_images()

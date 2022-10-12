@@ -21,7 +21,7 @@ def s3_resource(secret):
     return s3
 
 
-def download_images(s3, secret, limit=100):
+def download_images(s3, secret, limit=1000):
     img_path = './images'
     if not os.path.exists(img_path):
         os.mkdir(img_path)

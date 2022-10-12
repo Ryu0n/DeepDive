@@ -8,3 +8,4 @@ opencv-contrib-python
 pytesseract
 easyocr
 pandas
+tqdm
