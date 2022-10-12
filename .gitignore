@@ -1,0 +1,6 @@
+*.jpeg
+.idea
+secret.json
+cache.json
+label.json
+.DS_Store

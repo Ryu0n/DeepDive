@@ -1,0 +1,10 @@
+boto3
+transformers
+torch
+matplotlib
+pillow
+scikit-learn
+opencv-contrib-python
+pytesseract
+easyocr
+pandas
