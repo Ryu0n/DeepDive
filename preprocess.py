@@ -15,7 +15,7 @@ labels = {
 }
 
 
-def get_image_map(limit=1000):
+def write_image_map(limit=1000):
     image_map = dict()
     for f in glob.glob('images/**', recursive=True):
         if os.path.isdir(f):
@@ -25,10 +25,6 @@ def get_image_map(limit=1000):
         v = image_map.setdefault(dirname, list())
         if len(v) < limit:
             v.append(basename)
-    return image_map
-
-
-def write_image_map(image_map):
     with open('cache.json', 'w') as f:
         json_val = json.dumps(image_map, indent=4)
         f.write(json_val)
@@ -81,6 +77,5 @@ def get_images(scaling=True, rescaled_pixels=400):
 
 
 if __name__ == "__main__":
-    image_map = get_image_map()
-    write_image_map(image_map)
+    write_image_map()
     # show_random_images()

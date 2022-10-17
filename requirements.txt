@@ -9,3 +9,5 @@ pytesseract
 easyocr
 pandas
 tqdm
+datasets
+seqeval
