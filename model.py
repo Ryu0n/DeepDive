@@ -1,7 +1,6 @@
 import json
 import tqdm
 import torch
-import numpy as np
 import torch.nn as nn
 from torch.utils.data import DataLoader, Dataset
 from transformers import ViTFeatureExtractor, ViTForImageClassification, AdamW
@@ -11,7 +10,7 @@ from PIL import Image
 class SpamDataset(Dataset):
     def __init__(self, label_json: dict):
         self.contents = [
-            (np.array(Image.open(img_path)), 1 if label == "1" else 0)
+            (img_path, 1 if label == "1" else 0)
             for img_path, label in label_json.items()
         ]
 
@@ -27,7 +26,8 @@ def read_label_json():
         with open('label.json', 'r') as f:
             json_val = ''.join(f.readlines())
             return json.loads(json_val)
-    except:
+    except Exception as e:
+        print(e)
         return dict()
 
 
@@ -46,12 +46,12 @@ if __name__ == "__main__":
     for epoch in range(num_epochs):
         losses = []
         batches = tqdm.tqdm(dataloader, leave=True)
-        for img_path, label in batches:
+        for img_paths, labels in batches:
             optim.zero_grad()
-            image = np.array(Image.open(img_path))
-            inputs = feature_extractor(images=image, return_tensors="pt")
+            images = [Image.open(img_path) for img_path in img_paths]
+            inputs = feature_extractor(images=images, do_resize=True, size=500, return_tensors="pt")
             outputs = model(**inputs)
-            target = torch.LongTensor([label])
+            target = torch.LongTensor(labels)
             loss = criterion(outputs.logits, target)
             loss.backward()
             optim.step()

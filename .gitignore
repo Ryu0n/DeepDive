@@ -5,3 +5,6 @@ cache.json
 label.json
 .DS_Store
 __pycache__
+*.pt
+*.bin
+config.json
