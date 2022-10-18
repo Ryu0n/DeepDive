@@ -2,7 +2,7 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
-from preprocess import get_images, labels
+from preprocess import get_image_paths, labels
 
 
 def save_label_json(result):
@@ -23,8 +23,8 @@ def read_label_json():
 def custom_imshow(image):
     plt.imshow(image)
     plt.show(block=False)
-    plt.pause(0.5)
-    question = json.dumps(labels, indent=4, ensure_ascii=False)
+    plt.pause(0.2)
+    question = json.dumps(labels, indent=4, ensure_ascii=False) + '\nAnswer : '
     label = input(question)
     plt.close()
     return label
@@ -32,19 +32,13 @@ def custom_imshow(image):
 
 def label_images():
     label_json = read_label_json()
-    batches = list(zip(*get_images(scaling=False)))
-
+    img_paths = get_image_paths()
     try:
-        for i, (img_path, image) in enumerate(batches):
-
+        for i, img_path in enumerate(img_paths):
             if img_path in label_json.keys():
-                print(f'\n{img_path} is already exists!')
-                is_change = input("Want to change? [y/n] : ")
-                if is_change == 'y':
-                    label_json[img_path] = custom_imshow(image)
                 continue
-
-            print(f'\n[{i}/{len(batches)}] {img_path}')
+            image = np.array(Image.open(img_path))
+            print(f'\n[{i}/{len(img_paths)}] {img_path}')
             label_json[img_path] = custom_imshow(image)
 
     except KeyboardInterrupt:
@@ -57,12 +51,13 @@ def validate_labels(label_num):
     label_json = read_label_json()
     img_paths = [img_path for img_path, label in label_json.items() if label == str(label_num)]
     for i, img_path in enumerate(img_paths):
-        print(f'\n[{i} / {len(img_paths)}]')
-        img = np.array(Image.open(img_path))
-        plt.imshow(img)
-        plt.show()
+        print(f'\n[{i} / {len(img_paths)}] {img_path}')
+        image = np.array(Image.open(img_path))
+        label = custom_imshow(image)
+        label_json[img_path] = label
+    save_label_json(label_json)
 
 
 if __name__ == "__main__":
-    label_images()
+    # label_images()
     validate_labels(label_num=4)

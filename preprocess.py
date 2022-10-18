@@ -55,7 +55,18 @@ def show_random_images():
     plt.show()
 
 
-def get_images(scaling=True, rescaled_pixels=400):
+def get_image_paths():
+    img_paths = []
+    image_map = read_image_map()
+    import tqdm
+    for dirname in tqdm.tqdm(image_map.keys()):
+        for basename in image_map.get(dirname):
+            img_path = dirname + '/' + basename
+            img_paths.append(img_path)
+    return img_paths
+
+
+def get_images(scaling=True, rescaled_pixels=500):
     """
 
     :return: images shape -> (n_samples, width, height, channels)
