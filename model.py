@@ -37,7 +37,7 @@ class SpamDataset(Dataset):
             else:
                 _img_paths = img_paths[split_index:]
             for img_path in _img_paths:
-                contents.append((img_path, int(label)))
+                contents.append((img_path, int(label)-1))
         return contents
 
 
