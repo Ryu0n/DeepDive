@@ -3,9 +3,11 @@ import tqdm
 import torch
 import torch.nn as nn
 import numpy as np
+from torch.cuda import is_available
 from torch.utils.data import DataLoader, Dataset
 from transformers import ViTFeatureExtractor, ViTForImageClassification, AdamW
 from PIL import Image
+from sklearn.metrics import classification_report
 from datasets import load_metric
 
 
@@ -52,6 +54,7 @@ def read_label_json():
 
 if __name__ == "__main__":
     label_json = read_label_json()
+    device = 'cuda' if is_available() else 'cpu'
 
     # Training
     train_dataset = SpamDataset(label_json)
@@ -61,6 +64,7 @@ if __name__ == "__main__":
     model = ViTForImageClassification.from_pretrained(model_checkpoint)
     optim = AdamW(model.parameters(), lr=2e-5)
     criterion = nn.CrossEntropyLoss()
+    model.to(device)
     model.train()
     num_epochs = 5
     for epoch in range(num_epochs):
@@ -69,9 +73,9 @@ if __name__ == "__main__":
         for img_paths, labels in train_batches:
             optim.zero_grad()
             images = [Image.open(img_path) for img_path in img_paths]
-            inputs = feature_extractor(images=images, do_resize=True, size=500, return_tensors="pt")
+            inputs = feature_extractor(images=images, do_resize=True, size=500, return_tensors="pt").to(device)
             outputs = model(**inputs)
-            target = torch.LongTensor(labels)
+            target = torch.LongTensor(labels).to(device)
             loss = criterion(outputs.logits, target)
             loss.backward()
             optim.step()
@@ -84,23 +88,26 @@ if __name__ == "__main__":
         model.save_pretrained(model_checkpoint)
 
     # Evaluation
+    model_checkpoint = 'vit_epochs_4_loss_0.026.pt'
     test_dataset = SpamDataset(label_json, train=False)
     test_dataloader = DataLoader(test_dataset, batch_size=16, shuffle=True)
     test_batches = tqdm.tqdm(test_dataloader)
     fe_checkpoint = 'google/vit-base-patch16-224-in21k'
     feature_extractor = ViTFeatureExtractor.from_pretrained(fe_checkpoint)
     model = ViTForImageClassification.from_pretrained(model_checkpoint)
+    model.to(device)
     model.eval()
     true_labels, pred_labels = [], []
     for img_paths, labels in test_batches:
         images = [Image.open(img_path) for img_path in img_paths]
-        inputs = feature_extractor(images=images, do_resize=True, size=500, return_tensors='pt')
+        inputs = feature_extractor(images=images, do_resize=True, size=500, return_tensors='pt').to(device)
         outputs = model(**inputs)
         preds = outputs.logits.argmax(-1)
-        true_labels.append(labels)
-        pred_labels.append(preds)
+        preds = preds.detach().cpu().numpy() if is_available() else preds.numpy()
+        true_labels.extend(labels.numpy())
+        pred_labels.extend(preds)
     true_labels, pred_labels = map(np.array, (true_labels, pred_labels))
-    metric = load_metric("seqeval")
-    result = metric.compute(predictions=pred_labels,
-                            references=true_labels)
-    print(result)
+    report = classification_report(true_labels,
+                                   pred_labels,
+                                   target_names=['non-spam', 'spam'])
+    print(report)
