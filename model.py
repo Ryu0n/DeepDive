@@ -51,14 +51,9 @@ def read_label_json():
         return dict()
 
 
-if __name__ == "__main__":
-    label_json = read_label_json()
-    device = 'cuda' if is_available() else 'cpu'
-
-    # Training
+def train_image_spam_classifier(model_checkpoint, device, label_json):
     train_dataset = SpamDataset(label_json)
     train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
-    model_checkpoint = 'google/vit-base-patch16-224-in21k'
     feature_extractor = ViTFeatureExtractor.from_pretrained(model_checkpoint)
     model = ViTForImageClassification.from_pretrained(model_checkpoint,
                                                       num_labels=4)
@@ -66,7 +61,7 @@ if __name__ == "__main__":
     criterion = nn.CrossEntropyLoss()
     model.to(device)
     model.train()
-    num_epochs = 5
+    num_epochs, max_norm = 5, 5
     for epoch in range(num_epochs):
         losses = []
         train_batches = tqdm.tqdm(train_dataloader, leave=True)
@@ -78,6 +73,8 @@ if __name__ == "__main__":
             target = torch.LongTensor(labels).to(device)
             loss = criterion(outputs.logits, target)
             loss.backward()
+            torch.nn.utils.clip_grad_norm(model.parameters(),
+                                          max_norm=max_norm)
             optim.step()
             loss_val = round(loss.item(), 3)
             losses.append(loss_val)
@@ -86,8 +83,10 @@ if __name__ == "__main__":
             train_batches.set_postfix(loss=loss_mean)
         model_checkpoint = f'vit_epochs_{epoch}_loss_{loss_mean}.pt'
         model.save_pretrained(model_checkpoint)
+    return model_checkpoint
 
-    # Evaluation
+
+def evaluate_image_spam_classifier(model_checkpoint, device, label_json):
     test_dataset = SpamDataset(label_json, train=False)
     test_dataloader = DataLoader(test_dataset, batch_size=16, shuffle=True)
     test_batches = tqdm.tqdm(test_dataloader)
@@ -115,3 +114,15 @@ if __name__ == "__main__":
                                                  'misc'])
     with open('report.txt', 'w') as f:
         f.write(report)
+
+
+if __name__ == "__main__":
+    label_json = read_label_json()
+    device = 'cuda' if is_available() else 'cpu'
+    model_checkpoint = 'google/vit-base-patch16-224-in21k'
+
+    # Training
+    model_checkpoint = train_image_spam_classifier(model_checkpoint, device, label_json)
+
+    # Evaluation
+    evaluate_image_spam_classifier(model_checkpoint, device, label_json)
