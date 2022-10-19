@@ -50,14 +50,17 @@ def label_images():
 def validate_labels(label_num):
     label_json = read_label_json()
     img_paths = [img_path for img_path, label in label_json.items() if label == str(label_num)]
-    for i, img_path in enumerate(img_paths):
-        print(f'\n[{i} / {len(img_paths)}] {img_path}')
-        image = np.array(Image.open(img_path))
-        label = custom_imshow(image)
-        label_json[img_path] = label
+    try:
+        for i, img_path in enumerate(img_paths):
+            print(f'\n[{i} / {len(img_paths)}] {img_path}')
+            image = np.array(Image.open(img_path))
+            label = custom_imshow(image)
+            label_json[img_path] = label
+    except KeyboardInterrupt:
+        save_label_json(label_json)
     save_label_json(label_json)
 
 
 if __name__ == "__main__":
-    label_images()
-    # validate_labels(label_num=4)
+    # label_images()
+    validate_labels(label_num=2)

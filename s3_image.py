@@ -32,6 +32,13 @@ def read_label_json():
 
 
 def download_images(s3, secret, limit=1000):
+    """
+    s3 bucket에 존재하는 모든 이미지 다운로드
+    :param s3:
+    :param secret:
+    :param limit: 일자별 이미지 수
+수   :return:
+    """
     img_path = './images'
     if not os.path.exists(img_path):
         os.mkdir(img_path)
@@ -57,6 +64,12 @@ def download_images(s3, secret, limit=1000):
 
 
 def download_images_in_labeling(s3, secret):
+    """
+    label.json에 포함된 이미지만 다운로드
+    :param s3:
+    :param secret:
+    :return:
+    """
     # label.json
     label_json = read_label_json()
     labeled_img_paths = ['/'.join(labeled_img_path.split('/')[1:]) for labeled_img_path in label_json.keys()]
@@ -82,6 +95,13 @@ def download_images_in_labeling(s3, secret):
 
 
 def download_images_without_labeling(s3, secret, limit=100):
+    """
+    label.json에 포함되지 않은 이미지만 다운로드
+    :param s3:
+    :param secret:
+    :param limit:
+    :return:
+    """
     label_json = read_label_json()
     labeled_img_paths = ['/'.join(labeled_img_path.split('/')[1:]) for labeled_img_path in label_json.keys()]
 
@@ -118,5 +138,5 @@ if __name__ == "__main__":
     secret = secret_information()
     s3 = s3_resource(secret)
     download_images(s3, secret)
-
     # download_images_in_labeling(s3, secret)
+    # download_images_without_labeling(s3, secret)
