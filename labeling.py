@@ -62,5 +62,5 @@ def validate_labels(label_num):
 
 
 if __name__ == "__main__":
-    # label_images()
-    validate_labels(label_num=2)
+    label_images()
+    # validate_labels(label_num=4)
