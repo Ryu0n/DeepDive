@@ -10,44 +10,51 @@ from datasets import load_metric
 
 
 class SpamDataset(Dataset):
-    def __init__(self, train=True, train_ratio=0.7):
+    def __init__(self, label_json: dict, train=True, train_ratio=0.7):
         """
 
         :param train: if train is True, use for train dataset
         :param train_ratio: train test ratio
         """
-        label_json = self.read_label_json()
-        self.contents = [
-            (img_path, 1 if label == "1" else 0)
-            for img_path, label in label_json.items()
-        ]
-        if train:
-            self.contents = self.contents[:self.split_index(train_ratio)]
-        else:
-            self.contents = self.contents[self.split_index(train_ratio):]
+        self.contents = self.split_dataset_with_balancing(label_json, train, train_ratio)
 
     def __len__(self):
         return len(self.contents)
-    
+
     def __getitem__(self, index):
         return self.contents[index]
 
-    def read_label_json(self):
-        try:
-            with open('label.json', 'r') as f:
-                json_val = ''.join(f.readlines())
-                return json.loads(json_val)
-        except Exception as e:
-            print(e)
-            return dict()
+    def split_dataset_with_balancing(self, label_json, train, train_ratio):
+        balance_dict = dict()
+        for img_path, label in label_json.items():
+            balance_dict.setdefault(label, list()).append(img_path)
+        contents = list()
+        for label, img_paths in balance_dict.items():
+            split_index = int(len(img_paths) * train_ratio)
+            if train:
+                _img_paths = img_paths[:split_index]
+            else:
+                _img_paths = img_paths[split_index:]
+            for img_path in _img_paths:
+                contents.append((img_path, 1 if label == "1" else 0))
+        return contents
 
-    def split_index(self, train_ratio):
-        return int(len(self.contents) * train_ratio)
+
+def read_label_json():
+    try:
+        with open('label.json', 'r') as f:
+            json_val = ''.join(f.readlines())
+            return json.loads(json_val)
+    except Exception as e:
+        print(e)
+        return dict()
 
 
 if __name__ == "__main__":
+    label_json = read_label_json()
+
     # Training
-    train_dataset = SpamDataset()
+    train_dataset = SpamDataset(label_json)
     train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
     model_checkpoint = 'google/vit-base-patch16-224-in21k'
     feature_extractor = ViTFeatureExtractor.from_pretrained(model_checkpoint)
@@ -77,7 +84,7 @@ if __name__ == "__main__":
         model.save_pretrained(model_checkpoint)
 
     # Evaluation
-    test_dataset = SpamDataset(train=False)
+    test_dataset = SpamDataset(label_json, train=False)
     test_dataloader = DataLoader(test_dataset, batch_size=16, shuffle=True)
     test_batches = tqdm.tqdm(test_dataloader)
     fe_checkpoint = 'google/vit-base-patch16-224-in21k'
