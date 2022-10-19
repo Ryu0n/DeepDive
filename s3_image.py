@@ -53,13 +53,12 @@ def download_images_in_labeling(s3, secret):
             return dict()
     label_json = read_label_json()
     labeled_img_paths = ['/'.join(labeled_img_path.split('/')[1:]) for labeled_img_path in label_json.keys()]
-    img_path = './_images'
+    img_path = './images'
     if not os.path.exists(img_path):
         os.mkdir(img_path)
     bucket_name = secret.get('bucket_name')
     bucket = s3.Bucket(bucket_name)
-    for labeled_img_path in labeled_img_paths:
-        print(labeled_img_path)
+    for labeled_img_path in tqdm(labeled_img_paths):
         file_name = img_path + '/' + labeled_img_path
         dir_name = os.path.dirname(file_name)
         if not os.path.exists(dir_name):
@@ -76,5 +75,5 @@ if __name__ == "__main__":
     secret = secret_information()
     s3 = s3_resource(secret)
     # download_images(s3, secret)
-    #
+
     download_images_in_labeling(s3, secret)
