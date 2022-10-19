@@ -52,30 +52,29 @@ def download_images_in_labeling(s3, secret):
             print(e)
             return dict()
     label_json = read_label_json()
-    labeled_img_paths = [os.path.basename(labeled_img_path) for labeled_img_path in label_json.keys()]
-    img_path = './images'
+    labeled_img_paths = ['/'.join(labeled_img_path.split('/')[1:]) for labeled_img_path in label_json.keys()]
+    img_path = './_images'
     if not os.path.exists(img_path):
         os.mkdir(img_path)
     bucket_name = secret.get('bucket_name')
     bucket = s3.Bucket(bucket_name)
-    for obj in tqdm(bucket.objects.filter(Prefix='instagram'), leave=True):
-        key_dir = obj.key
-        file_name = img_path + '/' + key_dir
+    for labeled_img_path in labeled_img_paths:
+        print(labeled_img_path)
+        file_name = img_path + '/' + labeled_img_path
         dir_name = os.path.dirname(file_name)
-        if os.path.basename(key_dir) not in labeled_img_paths and os.path.exists(file_name):
-            continue
         if not os.path.exists(dir_name):
             os.makedirs(dir_name, exist_ok=True)
-        if not os.path.isdir(file_name):
-            bucket.download_file(
-                Key=key_dir,
-                Filename=file_name
-            )
+        if os.path.exists(file_name):
+            continue
+        bucket.download_file(
+            Key=labeled_img_path,
+            Filename=file_name
+        )
 
 
 if __name__ == "__main__":
     secret = secret_information()
     s3 = s3_resource(secret)
-    download_images(s3, secret)
-
-    # download_images_in_labeling(s3, secret)
+    # download_images(s3, secret)
+    #
+    download_images_in_labeling(s3, secret)

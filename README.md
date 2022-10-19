@@ -4,7 +4,7 @@
 - Collect data 
   - execute `s3_image.py`. It will download images from AWS S3 bucket.
 - Caching data for sampling
-  - execute `preprocess.py`. It will create `cache.py` that contains information about sampled images from whole datasets.
+  - execute `preprocess.py`. It will create `cache.json` that contains information that sampled images from whole datasets.
 - Label data 
   - execute `labelilng.py`. You can label image manually.
 - Model training & evaluation
