@@ -3,12 +3,11 @@ import tqdm
 import torch
 import torch.nn as nn
 import numpy as np
+from PIL import Image
 from torch.cuda import is_available
 from torch.utils.data import DataLoader, Dataset
 from transformers import ViTFeatureExtractor, ViTForImageClassification, AdamW
-from PIL import Image
 from sklearn.metrics import classification_report
-from datasets import load_metric
 
 
 class SpamDataset(Dataset):
@@ -38,7 +37,7 @@ class SpamDataset(Dataset):
             else:
                 _img_paths = img_paths[split_index:]
             for img_path in _img_paths:
-                contents.append((img_path, 1 if label == "1" else 0))
+                contents.append((img_path, int(label)))
         return contents
 
 
@@ -61,7 +60,8 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
     model_checkpoint = 'google/vit-base-patch16-224-in21k'
     feature_extractor = ViTFeatureExtractor.from_pretrained(model_checkpoint)
-    model = ViTForImageClassification.from_pretrained(model_checkpoint)
+    model = ViTForImageClassification.from_pretrained(model_checkpoint,
+                                                      num_labels=4)
     optim = AdamW(model.parameters(), lr=2e-5)
     criterion = nn.CrossEntropyLoss()
     model.to(device)
@@ -88,13 +88,13 @@ if __name__ == "__main__":
         model.save_pretrained(model_checkpoint)
 
     # Evaluation
-    model_checkpoint = 'vit_epochs_4_loss_0.026.pt'
     test_dataset = SpamDataset(label_json, train=False)
     test_dataloader = DataLoader(test_dataset, batch_size=16, shuffle=True)
     test_batches = tqdm.tqdm(test_dataloader)
     fe_checkpoint = 'google/vit-base-patch16-224-in21k'
     feature_extractor = ViTFeatureExtractor.from_pretrained(fe_checkpoint)
-    model = ViTForImageClassification.from_pretrained(model_checkpoint)
+    model = ViTForImageClassification.from_pretrained(model_checkpoint,
+                                                      num_labels=4)
     model.to(device)
     model.eval()
     true_labels, pred_labels = [], []
@@ -109,5 +109,9 @@ if __name__ == "__main__":
     true_labels, pred_labels = map(np.array, (true_labels, pred_labels))
     report = classification_report(true_labels,
                                    pred_labels,
-                                   target_names=['non-spam', 'spam'])
-    print(report)
+                                   target_names=['non-spam',
+                                                 'advertisement',
+                                                 'default_spam',
+                                                 'misc'])
+    with open('report.txt', 'w') as f:
+        f.write(report)
