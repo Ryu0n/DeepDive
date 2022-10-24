@@ -2,6 +2,7 @@ import json
 import numpy as np
 import matplotlib.pyplot as plt
 from PIL import Image
+from glob import glob
 from preprocess import get_image_paths, labels
 
 
@@ -30,9 +31,9 @@ def custom_imshow(image):
     return label
 
 
-def label_images():
+def label_images(from_excel=False):
     label_json = read_label_json()
-    img_paths = get_image_paths()
+    img_paths = glob('spam_images/*') if from_excel else get_image_paths()
     try:
         for i, img_path in enumerate(img_paths):
             if img_path in label_json.keys():

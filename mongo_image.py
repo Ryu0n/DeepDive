@@ -24,12 +24,6 @@ def uids_from_excel():
     return uids
 
 
-def search_documents_by_uid(collection):
-    uids = uids_from_excel()
-    for uid in uids:
-        yield collection.find_one({"_id": ObjectId(uid), "channelKeyname": "instagram"})
-
-
 def download_images(collection, limit=10000):
     docs = collection.find({"preSpamResult": 1, "channelKeyname": "instagram"})
     spam_image_path = 'spam_images/'
