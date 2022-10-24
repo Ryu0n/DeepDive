@@ -3,8 +3,12 @@
 secret.json
 cache.json
 label.json
+_label.json
 .DS_Store
 __pycache__
 *.pt
 *.bin
 config.json
+secret_mongo.json
+niz_prod_public_SPAM.xlsx
+spam_images/*.jpg
