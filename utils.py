@@ -1,5 +1,7 @@
 import os
 import json
+import zipfile
+import shutil
 import numpy as np
 from PIL import Image
 from glob import glob
@@ -54,3 +56,14 @@ def save_label_json(result):
     with open('label.json', 'w') as f:
         json_val = json.dumps(result, indent=4)
         f.write(json_val)
+
+
+def compress_spam_images():
+    shutil.make_archive('spam_images', 'zip', 'spam_images')
+
+
+def extract_spam_images():
+    zip_file = zipfile.ZipFile('spam_images.zip')
+    zip_file.extractall('spam_images')
+    zip_file.close()
+

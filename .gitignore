@@ -2,6 +2,7 @@
 *.json
 *.pt
 *.bin
+*.zip
 mongo_images/*
 mongo_images/*/*
 spam_images/*
