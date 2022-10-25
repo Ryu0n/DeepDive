@@ -1,13 +1,11 @@
 import sys
 import math
 import numpy as np
-
-from PIL import Image
 import matplotlib.pyplot as plt
+from PIL import Image
 from sklearn.cluster import KMeans
-
 from dimensionality_reduction import flatten_images, reduce_by_pca, reduce_by_tsne
-from preprocess import get_images
+from utils import get_images
 
 
 def visualize_clustering_result(img_paths, result, limit=40, rescaled_pixels=400):

@@ -1,10 +1,10 @@
 import easyocr
 import matplotlib.pyplot as plt
-from preprocess import get_images
+from utils import get_images
 
 if __name__ == "__main__":
     reader = easyocr.Reader(['ko'])
-    batches = list(zip(*get_images(scaling=False)))
+    batches = list(zip(*get_images()))
     for i, (img_path, image) in enumerate(batches):
         result = reader.readtext(img_path)
         result = [box for box in result if box[-1] > 0.9]

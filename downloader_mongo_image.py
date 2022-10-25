@@ -19,17 +19,27 @@ def retrieve_documents():
 
 
 def uids_from_excel():
+    """
+    스팸처리 결과 엑셀로부터 mongoDB 문서 uid 파싱
+    :return:
+    """
     df = pd.read_excel('niz_prod_public_SPAM.xlsx')
     uids = df['MONITORING_UID']
     return uids
 
 
-def download_images(collection, limit=10000):
-    docs = collection.find({"preSpamResult": 1, "channelKeyname": "instagram"})
-    spam_image_path = 'spam_images/'
+def download_images_from_mongo(collection, limit=10000):
+    """
+    mongoDB로부터 스팸처리된 문서의 썸네일 다운로드 (limit 갯수만큼)
+    :param collection:
+    :param limit:
+    :return:
+    """
+    docs = collection.find({"preSpamResult": 1})
+    spam_image_path = 'mongo_images/'
     if not os.path.exists(spam_image_path):
         os.mkdir(spam_image_path)
-    for doc in tqdm(docs):
+    for doc in tqdm(docs, leave=True, desc='Download images from mongoDB'):
         print(doc)
         if len(glob(f'{spam_image_path}*')) > limit:
             break
@@ -43,11 +53,17 @@ def download_images(collection, limit=10000):
 
 
 def download_images_from_excel(collection, limit=10000):
+    """
+    스팸 결과 엑셀로부터 문서내의 썸네일 다운로드 (limit 갯수만큼)
+    :param collection:
+    :param limit:
+    :return:
+    """
     uids = uids_from_excel()
-    spam_image_path = 'spam_images/'
+    spam_image_path = 'mongo_images/'
     if not os.path.exists(spam_image_path):
         os.mkdir(spam_image_path)
-    for uid in tqdm(uids):
+    for uid in tqdm(uids, leave=True, desc='Download images from mongoDB & excel'):
         doc = collection.find_one({"_id": ObjectId(uid)})
         if len(glob(f'{spam_image_path}*')) > limit:
             break

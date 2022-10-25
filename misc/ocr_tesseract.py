@@ -6,7 +6,7 @@ import re
 import cv2
 import pytesseract
 import matplotlib.pyplot as plt
-from preprocess import get_images
+from utils import get_images
 
 
 def text_extract(image):

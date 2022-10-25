@@ -1,4 +1,3 @@
-import json
 import tqdm
 import torch
 import torch.nn as nn
@@ -8,6 +7,7 @@ from torch.cuda import is_available
 from torch.utils.data import DataLoader, Dataset
 from transformers import ViTFeatureExtractor, ViTForImageClassification, AdamW
 from sklearn.metrics import classification_report
+from utils import get_images_classification_result
 
 
 class SpamDataset(Dataset):
@@ -41,22 +41,12 @@ class SpamDataset(Dataset):
         return contents
 
 
-def read_label_json():
-    try:
-        with open('label.json', 'r') as f:
-            json_val = ''.join(f.readlines())
-            return json.loads(json_val)
-    except Exception as e:
-        print(e)
-        return dict()
-
-
 def train_image_spam_classifier(model_checkpoint, device, label_json):
     train_dataset = SpamDataset(label_json)
     train_dataloader = DataLoader(train_dataset, batch_size=16, shuffle=True)
     feature_extractor = ViTFeatureExtractor.from_pretrained(model_checkpoint)
     model = ViTForImageClassification.from_pretrained(model_checkpoint,
-                                                      num_labels=4)
+                                                      num_labels=3)
     optim = AdamW(model.parameters(), lr=2e-5)
     criterion = nn.CrossEntropyLoss()
     model.to(device)
@@ -93,7 +83,7 @@ def evaluate_image_spam_classifier(model_checkpoint, device, label_json):
     fe_checkpoint = 'google/vit-base-patch16-224-in21k'
     feature_extractor = ViTFeatureExtractor.from_pretrained(fe_checkpoint)
     model = ViTForImageClassification.from_pretrained(model_checkpoint,
-                                                      num_labels=4)
+                                                      num_labels=3)
     model.to(device)
     model.eval()
     true_labels, pred_labels = [], []
@@ -109,15 +99,14 @@ def evaluate_image_spam_classifier(model_checkpoint, device, label_json):
     report = classification_report(true_labels,
                                    pred_labels,
                                    target_names=['non-spam',
-                                                 'advertisement',
                                                  'default_spam',
-                                                 'misc'])
+                                                 'meaningless'])
     with open('report.txt', 'w') as f:
         f.write(report)
 
 
 if __name__ == "__main__":
-    label_json = read_label_json()
+    label_json = get_images_classification_result()
     device = 'cuda' if is_available() else 'cpu'
     model_checkpoint = 'google/vit-base-patch16-224-in21k'
 

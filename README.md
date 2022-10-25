@@ -2,9 +2,8 @@
 ## Usage  
 
 - Collect data 
-  - execute `s3_image.py`. It will download images from AWS S3 bucket.
-- Caching data for sampling
-  - execute `preprocess.py`. It will create `cache.json` that contains information that sampled images from whole datasets.
+  - execute `downloader_s3_image.py`. It will download images from AWS S3 bucket. (`instagram/date/*`)
+  - execute `downloader_mongo_image.py`. It will download images from mongoDB. (`mongo_images/*`)
 - Label data 
   - execute `labelilng.py`. You can label image manually.
 - Model training & evaluation
