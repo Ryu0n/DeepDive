@@ -57,7 +57,7 @@ def train_image_spam_classifier(model_checkpoint, device, label_json):
         train_batches = tqdm.tqdm(train_dataloader, leave=True)
         for img_paths, labels in train_batches:
             optim.zero_grad()
-            images = [Image.open(img_path) for img_path in img_paths]
+            images = [Image.open(img_path).convert('RGB') for img_path in img_paths]
             inputs = feature_extractor(images=images, do_resize=True, size=500, return_tensors="pt").to(device)
             outputs = model(**inputs)
             target = torch.LongTensor(labels).to(device)
@@ -88,7 +88,7 @@ def evaluate_image_spam_classifier(model_checkpoint, device, label_json):
     model.eval()
     true_labels, pred_labels = [], []
     for img_paths, labels in test_batches:
-        images = [Image.open(img_path) for img_path in img_paths]
+        images = [Image.open(img_path).convert('RGB') for img_path in img_paths]
         inputs = feature_extractor(images=images, do_resize=True, size=500, return_tensors='pt').to(device)
         outputs = model(**inputs)
         preds = outputs.logits.argmax(-1)
