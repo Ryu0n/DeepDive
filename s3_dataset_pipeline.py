@@ -1,7 +1,7 @@
 import os
 import json
 import boto3
-from utils import compress_spam_images
+from utils import compress_spam_images, extract_spam_images
 
 
 def secret_information():
@@ -39,6 +39,7 @@ def download_dataset(s3):
         Key=zip_file_name,
         Filename=zip_file_name
     )
+    extract_spam_images()
 
 
 if __name__ == "__main__":
