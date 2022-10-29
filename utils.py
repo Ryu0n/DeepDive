@@ -1,0 +1,48 @@
+import re
+import json
+import requests
+from typing import List
+
+
+def tokenize_by_okt(sentence: str) -> str:
+    """
+    OKT 토크나이저 API 요청
+    :param sentence:
+    :return:
+    """
+    url = 'http://127.0.0.1:8080/tokenize'
+    data = {
+        "sentence": sentence
+    }
+    response = requests.post(url, data=json.dumps(data))
+    return response.content.decode('utf-8')
+
+
+def string_to_list(string):
+    """
+    '["나","는","사과","를","먹었다","."]' -> ["나", "는", "사과", "를", "먹었다", "."]
+    :param string:
+    :return:
+    """
+    tokens = string[1:-1].split(',')
+    return list(map(lambda token: re.sub('"', '', token), tokens))
+
+
+def filter_stopwords(sentence: str) -> List[str]:
+    """
+    불용어 제거
+    :param sentence:
+    :return:
+    """
+    token_string = tokenize_by_okt(sentence)
+    tokens = string_to_list(token_string)
+    with open('stopwords.txt', 'r') as f:
+        stopwords = list(map(lambda stopword: stopword.replace('\n', ''), f.readlines()))
+    sanitized_tokens = list(filter(lambda token: token not in stopwords, tokens))
+    return sanitized_tokens
+
+
+if __name__ == "__main__":
+    sentence = '나는 사과를 먹었다.'
+    sanitized_tokens = filter_stopwords(sentence)
+    print(sanitized_tokens)
