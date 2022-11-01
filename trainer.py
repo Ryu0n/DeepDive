@@ -13,11 +13,12 @@ device = 'cuda' if is_available() else 'cpu'
 
 
 def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
-    train_dataloader = dataloader(is_train=True)
-    eval_dataloader = dataloader(is_train=False)
+    train_dataloader = dataloader(is_train=True, device=device)
+    eval_dataloader = dataloader(is_train=False, device=device)
 
     model_class, tokenizer_class = model_checkpoints.get(model_checkpoint)
     model = model_class.from_pretrained(model_checkpoint, num_labels=len(labels_dict))
+    model.to(device)
     optim = AdamW(model.parameters(), lr=2e-5)
 
     # Training
@@ -58,4 +59,5 @@ def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
             preds = torch.argmax(probs, dim=-1)
 
 
-
+if __name__ == "__main__":
+    train_eval_ko_ner_model("klue/bert-base")

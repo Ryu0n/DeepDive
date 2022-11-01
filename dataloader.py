@@ -1,4 +1,5 @@
 import torch
+from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 from transformers import BertTokenizerFast
 
@@ -10,7 +11,8 @@ dataset_file_names = {
 
 
 class NerDataset(Dataset):
-    def __init__(self, is_train):
+    def __init__(self, is_train, device):
+        self.device = device
         self.contents = {
             "input_ids": [],
             "token_type_ids": [],
@@ -22,11 +24,11 @@ class NerDataset(Dataset):
         dataset_file_name = dataset_file_names[is_train]
 
         with open(dataset_file_name, 'r') as f:
-            for line in f.readlines():
+            for line in tqdm(f.readlines()):
                 line = line.replace('\n', '')
                 sentence, label = line.split('\t')
                 label = list(map(int, label.split(' ')))
-                label = torch.LongTensor(label)
+                label = torch.tensor(label, dtype=torch.long)
                 inputs = tokenizer.encode_plus(sentence,
                                                return_tensors='pt',
                                                padding='max_length')
@@ -39,23 +41,12 @@ class NerDataset(Dataset):
         return len(self.contents.get("labels"))
 
     def __getitem__(self, index):
-        return {key: value[index] for key, value in self.contents.items()}
+        return {key: value[index].to(self.device) for key, value in self.contents.items()}
 
 
-def dataloader(is_train, batch_size=16, num_workers=2):
-    dataset = NerDataset(is_train=is_train)
+def dataloader(is_train, device, batch_size=16, num_workers=2):
+    dataset = NerDataset(is_train=is_train, device=device)
     return DataLoader(dataset=dataset,
                       batch_size=batch_size,
                       shuffle=True,
                       num_workers=num_workers)
-
-
-if __name__ == "__main__":
-    train_dataset = NerDataset(is_train=True)
-    for e in train_dataset:
-        print(e)
-        break
-    train_dataloader = DataLoader(train_dataset, batch_size=4, shuffle=True)
-    for batch in train_dataloader:
-        print(batch)
-        break
