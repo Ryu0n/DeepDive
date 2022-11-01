@@ -5,8 +5,10 @@ from transformers import AdamW
 from torch.cuda import is_available
 from tqdm import tqdm
 from sklearn.metrics import classification_report
+from utils import get_labels_dict
 
 
+labels_dict = get_labels_dict()
 device = 'cuda' if is_available() else 'cpu'
 
 
@@ -15,7 +17,7 @@ def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
     eval_dataloader = dataloader(is_train=False)
 
     model_class, tokenizer_class = model_checkpoints.get(model_checkpoint)
-    model = model_class.from_pretrained(model_checkpoint)
+    model = model_class.from_pretrained(model_checkpoint, num_labels=len(labels_dict))
     optim = AdamW(model.parameters(), lr=2e-5)
 
     # Training

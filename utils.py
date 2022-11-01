@@ -6,11 +6,14 @@ from transformers import BertTokenizerFast
 # model_checkpoint = 'bert-base-multilingual-cased'
 model_checkpoint = 'klue/bert-base'
 
-labels_dict = dict()
-with open('labels.txt', 'r') as f:
-    labels = list(map(lambda label: label.replace('\n', ''), f.readlines()))
-    for i, label in enumerate(labels):
-        labels_dict[label] = i
+
+def get_labels_dict():
+    labels_dict = dict()
+    with open('labels.txt', 'r') as f:
+        labels = list(map(lambda label: label.replace('\n', ''), f.readlines()))
+        for i, label in enumerate(labels):
+            labels_dict[label] = i
+    return labels_dict
 
 
 def convert_to_cache(file_name: str):
@@ -29,6 +32,7 @@ def read_raw_data(file_name: str):
     :param file_name:
     :return:
     """
+    labels_dict = get_labels_dict()
     tokenizer = BertTokenizerFast.from_pretrained(model_checkpoint)
     with open(file_name, 'r') as f:
         json_val = ''.join(f.readlines())
