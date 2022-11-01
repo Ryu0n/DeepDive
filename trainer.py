@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from model import model_checkpoints
 from dataloader import dataloader
 from transformers import AdamW
@@ -10,9 +11,30 @@ from utils import get_labels_dict
 
 labels_dict = get_labels_dict()
 device = 'cuda' if is_available() else 'cpu'
+special_tokens = [
+    "[UNK]",
+    "[SEP]",
+    "[PAD]",
+    "[CLS]",
+    "[MASK]"
+]
 
 
 def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
+
+    def filter_special_tokens(b_input_ids, tensors):
+        tokenizer = tokenizer_class.from_pretrained(model_checkpoint)
+        for input_ids, tensor in zip(b_input_ids, tensors):
+            input_tokens = np.array(tokenizer.convert_ids_to_tokens(input_ids))
+            filtered_tensor = tensor[
+                (input_tokens != special_tokens[0]) &
+                (input_tokens != special_tokens[1]) &
+                (input_tokens != special_tokens[2]) &
+                (input_tokens != special_tokens[3]) &
+                (input_tokens != special_tokens[4])
+                ]
+            yield filtered_tensor
+
     train_dataloader = dataloader(is_train=True, device=device)
     eval_dataloader = dataloader(is_train=False, device=device)
 
@@ -40,13 +62,10 @@ def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
 
     # Evaluation
     with torch.no_grad():
-        tokenizer = tokenizer_class.from_pretrained(model_checkpoint)
-        special_tokens = list(tokenizer.special_tokens_map.values())
-        special_token_ids = tokenizer.convert_tokens_to_ids(special_tokens)
-        ignore_index = torch.nn.CrossEntropyLoss().ignore_index
+        y_true, y_pred = [], []
         eval_loop = tqdm(eval_dataloader, leave=True, desc=f'Evaluation')
         for batch in eval_loop:
-            input_ids = batch.get("input_ids")
+            b_input_ids = batch.get("input_ids")
 
             # (batch_size, sequence_length)
             labels = batch.get("labels")
@@ -57,6 +76,21 @@ def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
             outputs = model(**batch)
             probs = torch.softmax(outputs.logits, dim=-1)
             preds = torch.argmax(probs, dim=-1)
+
+            preds = filter_special_tokens(b_input_ids, preds)
+            labels = filter_special_tokens(b_input_ids, labels)
+
+            for pred, label in zip(preds, labels):
+                y_true.extend(label.detach().cpu().numpy())
+                y_pred.extend(pred.detach().cpu().numpy())
+
+    report = classification_report(y_true=np.array(y_true),
+                                   y_pred=np.array(y_pred))
+
+    with open('report.txt', 'w') as f:
+        print(report)
+        f.write(report)
+
 
 
 if __name__ == "__main__":

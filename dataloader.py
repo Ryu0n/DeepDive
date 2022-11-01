@@ -44,9 +44,8 @@ class NerDataset(Dataset):
         return {key: value[index].to(self.device) for key, value in self.contents.items()}
 
 
-def dataloader(is_train, device, batch_size=16, num_workers=2):
+def dataloader(is_train, device, batch_size=16):
     dataset = NerDataset(is_train=is_train, device=device)
     return DataLoader(dataset=dataset,
                       batch_size=batch_size,
-                      shuffle=True,
-                      num_workers=num_workers)
+                      shuffle=True)

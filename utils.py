@@ -1,5 +1,6 @@
 import json
 from tqdm import tqdm
+from torch.nn import CrossEntropyLoss
 from transformers import BertTokenizerFast
 
 # model_checkpoint = 'monologg/kobert'
@@ -61,7 +62,7 @@ def read_raw_data(file_name: str):
                     ne_start_index, ne_end_index = named_entity.get("begin"), named_entity.get("end")
                     if ne_start_index <= start_index < ne_end_index:
                         token_label = named_entity.get("label")
-                sentence_label.append(-100 if token == "[PAD]" else labels_dict.get(token_label))
+                sentence_label.append(CrossEntropyLoss().ignore_index if token == "[PAD]" else labels_dict.get(token_label))
 
             result.append({
                 "sentence": sentence_form,
