@@ -92,6 +92,5 @@ def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
         f.write(report)
 
 
-
 if __name__ == "__main__":
     train_eval_ko_ner_model("klue/bert-base")
