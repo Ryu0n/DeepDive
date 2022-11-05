@@ -42,16 +42,16 @@ def filter_stopwords(sentence: str) -> List[str]:
     return sanitized_tokens
 
 
-def filter_special_characters(sanitized_tokens: List[str]) -> str:
+def filter_special_characters(sentence: str) -> str:
     """
     불용어가 제거된 토큰들을 입력받아 특수문자 제거 후 문자열로 병합하여 반환
     :param sanitized_tokens:
     :return:
     """
-    pass
+    return re.sub('[^가-힣0-9a-zA-Z\s]', '', sentence)
 
 
 if __name__ == "__main__":
     sentence = '나는 사과를 먹었다.'
-    sanitized_tokens = filter_stopwords(sentence)
-    print(sanitized_tokens)
+    # sanitized_tokens = filter_stopwords(sentence)
+    # print(sanitized_tokens)

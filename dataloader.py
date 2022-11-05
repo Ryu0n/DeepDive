@@ -1,5 +1,6 @@
 from Korpora import Korpora
 from torch.utils.data import Dataset, DataLoader
+from utils import filter_special_characters
 
 
 class NSMCDataset(Dataset):
@@ -8,6 +9,9 @@ class NSMCDataset(Dataset):
         Korpora.fetch(dataset_checkpoint)
         self.corpus = Korpora.load(dataset_checkpoint)
         self.is_train = is_train
+
+        list(map(filter_special_characters(), self.corpus.train.texts))
+        # filter_special_characters(self.corpus.test.texts)
 
     def __len__(self):
         return len(self.corpus.train if self.is_train else self.corpus.test)
@@ -21,5 +25,5 @@ class NSMCDataset(Dataset):
 if __name__ == "__main__":
     train_dataset = NSMCDataset(is_train=True)
     test_dataset = NSMCDataset(is_train=False)
-    print(train_dataset[0])
-    print(test_dataset[0])
+    # print(train_dataset[0])
+    # print(test_dataset[0])
