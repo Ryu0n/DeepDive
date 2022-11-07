@@ -6,7 +6,8 @@ from transformers import AdamW
 from torch.cuda import is_available
 from tqdm import tqdm
 from sklearn.metrics import classification_report
-from utils import get_labels_dict
+# from utils import get_labels_dict  # 국립국어원 라벨
+from preprocess_for_selecstar import get_labels_dict
 
 
 labels_dict = get_labels_dict()
