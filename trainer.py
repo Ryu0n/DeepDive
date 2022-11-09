@@ -1,3 +1,4 @@
+import gc
 import torch
 import numpy as np
 from model import model_checkpoints
@@ -93,5 +94,11 @@ def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
         f.write(report)
 
 
+def clear_gpu_memory():
+    gc.collect()
+    torch.cuda.empty_cache()
+
+
 if __name__ == "__main__":
+    clear_gpu_memory()
     train_eval_ko_ner_model("klue/bert-base")
