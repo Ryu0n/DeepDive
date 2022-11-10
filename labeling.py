@@ -21,7 +21,7 @@ def custom_imshow(image):
 def label_images(from_mongo=False):
     """
     이미지 라벨링 후, label.json에 결과 저장
-    :param from_mongo: mongoDB로부터 다운로드 받은 이미지 여부 (True : s3, False: mongo)
+    :param from_mongo: mongoDB로부터 다운로드 받은 이미지 여부 (True : mongo, False: s3)
     :return:
     """
     label_json = read_label_json()
@@ -79,6 +79,5 @@ def copy_images_to_spam_images_directory():
 
 
 if __name__ == "__main__":
-    # label_images(from_mongo=False)
+    label_images(from_mongo=True)
     # validate_labels(label_num=2)
-    copy_images_to_spam_images_directory()

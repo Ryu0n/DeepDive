@@ -3,10 +3,10 @@
 *.pt
 *.bin
 *.zip
-mongo_images/*
-mongo_images/*/*
-spam_images/*
-spam_images/*/*
+instagram
+mongo_excel_images
+mongo_images
+spam_images
 
 .DS_Store
 .idea

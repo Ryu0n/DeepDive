@@ -14,8 +14,9 @@ labels = {
 
 
 def get_image_paths(from_mongo=False):
+    labeled_paths = [os.path.basename(p) for p in glob('spam_images/**', recursive=True)]
     if from_mongo:
-        return [p for p in glob('mongo_images/*') if not os.path.isdir(p)]
+        return [p for p in glob('mongo_excel_images/*') if not os.path.isdir(p) and os.path.basename(p) not in labeled_paths]
     return [p for p in glob('instagram/**', recursive=True) if not os.path.isdir(p)]
 
 
