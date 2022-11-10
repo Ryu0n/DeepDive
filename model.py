@@ -177,4 +177,3 @@ class Discriminator(nn.Module):
         d_in = torch.cat((img, label_embed), dim=1)
         validity = self.downsampling(d_in)
         return validity.squeeze()
-

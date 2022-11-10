@@ -92,11 +92,23 @@ def train_gan():
             d_fake_loss = adversarial_loss(validity_fake, fake)
 
             d_loss = (d_real_loss + d_fake_loss) / 2
+            d_loss_val = round(d_loss.item(), 3)
 
             d_loss.backward()
             optimizer_D.step()
 
+            dataloader.set_postfix(loss=d_loss_val)
+
         sample_image(generator, n_width=10, epoch=epoch)
+        generator_checkpoint = f'generator_epoch_{epoch}_loss_{d_loss_val}.pt'
+        discriminator_checkpoint = f'discriminator_epoch_{epoch}_loss_{d_loss_val}.pt'
+        torch.save(generator.state_dict(), generator_checkpoint)
+        torch.save(discriminator.state_dict(), discriminator_checkpoint)
+
+
+def load_gan(generator_checkpoint: str, discriminator_checkpoint: str):
+    generator = Generator().load_state_dict(torch.load(generator_checkpoint))
+    discriminator = Discriminator().load_state_dict(torch.load(discriminator_checkpoint))
 
 
 if __name__ == "__main__":

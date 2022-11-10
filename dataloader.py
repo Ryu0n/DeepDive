@@ -30,7 +30,7 @@ class SpamImageDataset(Dataset):
         image_list = self.train_image_list if self.is_train else self.test_image_list
         n_class, image_path = image_list[index]
         image = np.array(Image.open(image_path).convert("RGB").resize((config.img_size, config.img_size))).transpose((2, 0, 1))
-        return n_class, image
+        return n_class-1, image
 
 
 def load_dataloader():
