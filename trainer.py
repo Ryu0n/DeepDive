@@ -42,6 +42,13 @@ def train_gan():
         betas=(config.b1, config.b2)
     )
     adversarial_loss = torch.nn.MSELoss()
+
+    device = 'cuda' if is_available() else 'cpu'
+    if is_available():
+        generator.to(device)
+        discriminator.to(device)
+        adversarial_loss.to(device)
+
     train_dataloader, test_dataloder = load_dataloader()
     for epoch in range(config.n_epochs):
         dataloader = tqdm(train_dataloader, leave=True, desc=f'Epoch : {epoch}')
