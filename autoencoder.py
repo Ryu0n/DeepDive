@@ -1,4 +1,4 @@
-import numpy as npgit
+import numpy as np
 import torch
 import torch.nn as nn
 from tqdm import tqdm
