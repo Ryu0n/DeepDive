@@ -3,3 +3,4 @@ tqdm
 numpy
 fastapi
 uvicorn[standard]
+requests

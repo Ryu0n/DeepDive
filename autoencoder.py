@@ -73,6 +73,6 @@ def train_auto_encoder(sentence_vectors: np.ndarray, num_epochs=10, lr=0.005):
     return ae
 
 
-def compress_vector(ae: AutoEncoder, vectors: np.ndarray) -> np.ndarray:
-    return ae.compress(torch.from_numpy(vectors).float()).detach().numpy()
+def compress_vector(ae: AutoEncoder, sentence_vectors: np.ndarray) -> np.ndarray:
+    return ae.compress(torch.from_numpy(sentence_vectors).float()).detach().numpy()
 
