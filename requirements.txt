@@ -6,3 +6,4 @@ pandas
 transformers
 Korpora
 konlpy
+scikit-learn

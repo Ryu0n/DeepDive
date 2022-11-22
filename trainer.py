@@ -2,14 +2,15 @@ import torch
 from tqdm import tqdm
 from dataloader import dataloader
 from torch.cuda import is_available
-from transformers import BertForSequenceClassification, BertTokenizer, AdamW
+from transformers import BertForSequenceClassification, AdamW
+from sklearn.metrics import classification_report
 
 # model_checkpoint = 'monologg/kobert'
 model_checkpoint = 'klue/bert-base'
+device = 'cuda' if is_available() else 'cpu'
 
 
 def train_sentimental_classifier(num_epochs=5, batch_size=16):
-    device = 'cuda' if is_available() else 'cpu'
     model = BertForSequenceClassification.from_pretrained(model_checkpoint)
     optim = AdamW(model.parameters(), lr=2e-5)
     train_dataloader = dataloader(is_train=True, batch_size=batch_size)
@@ -36,7 +37,13 @@ def train_sentimental_classifier(num_epochs=5, batch_size=16):
 
 
 def evaluate_sentimental_classifier(save_model_checkpoint):
-    pass
+    model = BertForSequenceClassification.from_pretrained(save_model_checkpoint)
+    test_dataloader = dataloader(is_train=False, batch_size=16)
+
+    for batch in test_dataloader:
+        outputs = model(**batch)
+        logits = outputs.logits
+        pred = torch.argmax(logits, dim=-1)
 
 
 if __name__ == "__main__":
