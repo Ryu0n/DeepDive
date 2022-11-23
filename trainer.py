@@ -1,11 +1,12 @@
 import torch
+import numpy as np
 from tqdm import tqdm
 from dataloader import dataloader
 from torch.cuda import is_available
 from transformers import BertForSequenceClassification, AdamW
 from sklearn.metrics import classification_report
 
-# model_checkpoint = 'monologg/kobert'
+
 model_checkpoint = 'klue/bert-base'
 device = 'cuda' if is_available() else 'cpu'
 
@@ -40,12 +41,30 @@ def evaluate_sentimental_classifier(save_model_checkpoint):
     model = BertForSequenceClassification.from_pretrained(save_model_checkpoint)
     test_dataloader = dataloader(is_train=False, batch_size=16)
 
+    preds, labels = list(), list()
     for batch in test_dataloader:
         outputs = model(**batch)
         logits = outputs.logits
         pred = torch.argmax(logits, dim=-1)
+        pred = pred.detach().cpu().numpy()
+        preds.append(pred)
+        labels.append(
+            batch.get('labels').detach().cpu().numpy()
+        )
+    preds = np.array(preds).flatten()
+    labels = np.array(labels).flatten()
+    report_text = classification_report(
+        y_true=labels,
+        y_pred=preds,
+        target_names=['negative', 'positive']
+    )
+    with open('report.txt', 'w') as f:
+        print(report_text)
+        f.write(report_text)
 
 
 if __name__ == "__main__":
-    save_model_checkpoint = train_sentimental_classifier(1, 4)
+    save_model_checkpoint = train_sentimental_classifier(num_epochs=1,
+                                                         batch_size=4)
     evaluate_sentimental_classifier(save_model_checkpoint)
+    # evaluate_sentimental_classifier('klue/bert-base')  # For debug
