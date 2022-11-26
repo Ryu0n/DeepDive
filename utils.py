@@ -49,9 +49,3 @@ def filter_special_characters(sentence: str) -> str:
     :return:
     """
     return re.sub('[^가-힣0-9a-zA-Z\s]', '', sentence)
-
-
-if __name__ == "__main__":
-    sentence = '나는 사과를 먹었다.'
-    # sanitized_tokens = filter_stopwords(sentence)
-    # print(sanitized_tokens)

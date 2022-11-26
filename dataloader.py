@@ -59,10 +59,3 @@ def dataloader(is_train: bool, batch_size: int):
     return DataLoader(dataset,
                       batch_size=batch_size,
                       shuffle=True)
-
-
-if __name__ == "__main__":
-    train_dataloader = dataloader(is_train=True, batch_size=16)
-    for batch in train_dataloader:
-        print(batch)
-        break

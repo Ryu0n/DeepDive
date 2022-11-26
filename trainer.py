@@ -15,6 +15,7 @@ def train_sentimental_classifier(num_epochs=5, batch_size=16):
     model = BertForSequenceClassification.from_pretrained(model_checkpoint)
     optim = AdamW(model.parameters(), lr=2e-5)
     train_dataloader = dataloader(is_train=True, batch_size=batch_size)
+    model.to(device)
 
     for epoch in range(num_epochs):
         total_loss = 0
@@ -22,7 +23,7 @@ def train_sentimental_classifier(num_epochs=5, batch_size=16):
 
         for batch in train_dataloader:
             optim.zero_grad()
-            outputs = model(**batch)
+            outputs = model(**batch.to(device))
             loss = outputs.loss
             loss.backward()
             optim.step()
@@ -40,10 +41,11 @@ def train_sentimental_classifier(num_epochs=5, batch_size=16):
 def evaluate_sentimental_classifier(save_model_checkpoint):
     model = BertForSequenceClassification.from_pretrained(save_model_checkpoint)
     test_dataloader = dataloader(is_train=False, batch_size=16)
+    model.to(device)
 
     preds, labels = list(), list()
     for batch in test_dataloader:
-        outputs = model(**batch)
+        outputs = model(**batch.to(device))
         logits = outputs.logits
         pred = torch.argmax(logits, dim=-1)
         pred = pred.detach().cpu().numpy()
@@ -67,4 +69,3 @@ if __name__ == "__main__":
     save_model_checkpoint = train_sentimental_classifier(num_epochs=1,
                                                          batch_size=4)
     evaluate_sentimental_classifier(save_model_checkpoint)
-    # evaluate_sentimental_classifier('klue/bert-base')  # For debug
