@@ -4,6 +4,12 @@ from Korpora import Korpora
 from torch.utils.data import Dataset, DataLoader
 from utils import filter_special_characters
 from transformers import BertTokenizer
+from torch.cuda import is_available
+from torch.backends.mps import is_available as mps_is_available
+
+
+device = 'cuda' if is_available() else 'cpu'
+# device = 'mps' if mps_is_available() else 'cpu'  # for silicon mac
 
 
 class NSMCDataset(Dataset):
@@ -51,7 +57,7 @@ class NSMCDataset(Dataset):
         return len(self.contents.get("labels"))
 
     def __getitem__(self, index):
-        return {k: v[index] for k, v in self.contents.items()}
+        return {k: v[index].to(device) for k, v in self.contents.items()}
 
 
 def dataloader(is_train: bool, batch_size: int):

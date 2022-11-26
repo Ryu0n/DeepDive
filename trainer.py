@@ -3,12 +3,14 @@ import numpy as np
 from tqdm import tqdm
 from dataloader import dataloader
 from torch.cuda import is_available
+from torch.backends.mps import is_available as mps_is_available
 from transformers import BertForSequenceClassification, AdamW
 from sklearn.metrics import classification_report
 
 
 model_checkpoint = 'klue/bert-base'
 device = 'cuda' if is_available() else 'cpu'
+# device = 'mps' if mps_is_available() else 'cpu'  # for silicon mac
 
 
 def train_sentimental_classifier(num_epochs=5, batch_size=16):
@@ -23,7 +25,7 @@ def train_sentimental_classifier(num_epochs=5, batch_size=16):
 
         for batch in train_dataloader:
             optim.zero_grad()
-            outputs = model(**batch.to(device))
+            outputs = model(**batch)
             loss = outputs.loss
             loss.backward()
             optim.step()
@@ -45,7 +47,7 @@ def evaluate_sentimental_classifier(save_model_checkpoint):
 
     preds, labels = list(), list()
     for batch in test_dataloader:
-        outputs = model(**batch.to(device))
+        outputs = model(**batch)
         logits = outputs.logits
         pred = torch.argmax(logits, dim=-1)
         pred = pred.detach().cpu().numpy()
