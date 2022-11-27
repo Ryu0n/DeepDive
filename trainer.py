@@ -68,6 +68,6 @@ def evaluate_sentimental_classifier(save_model_checkpoint):
 
 
 if __name__ == "__main__":
-    save_model_checkpoint = train_sentimental_classifier(num_epochs=1,
-                                                         batch_size=4)
+    save_model_checkpoint = train_sentimental_classifier(num_epochs=5,
+                                                         batch_size=16)
     evaluate_sentimental_classifier(save_model_checkpoint)
