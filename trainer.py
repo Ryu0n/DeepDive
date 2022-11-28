@@ -43,7 +43,7 @@ def train_sentimental_classifier(num_epochs=5, batch_size=16, learning_rate=2e-5
 
 def evaluate_sentimental_classifier(save_model_checkpoint, batch_size=16):
     model = BertForSequenceClassification.from_pretrained(save_model_checkpoint)
-    test_dataloader = dataloader(is_train=False, batch_size=batch_size)
+    test_dataloader = tqdm(dataloader(is_train=False, batch_size=batch_size), leave=True)
     model.to(device)
 
     preds, labels = list(), list()
