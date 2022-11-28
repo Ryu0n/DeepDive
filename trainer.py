@@ -6,6 +6,7 @@ from torch.cuda import is_available
 from torch.backends.mps import is_available as mps_is_available
 from transformers import BertForSequenceClassification, AdamW
 from sklearn.metrics import classification_report
+from config import Config as cfg
 
 
 model_checkpoint = 'klue/bert-base'
@@ -13,9 +14,9 @@ device = 'cuda' if is_available() else 'cpu'
 # device = 'mps' if mps_is_available() else 'cpu'  # for silicon mac
 
 
-def train_sentimental_classifier(num_epochs=5, batch_size=16):
+def train_sentimental_classifier(num_epochs=5, batch_size=16, learning_rate=2e-5):
     model = BertForSequenceClassification.from_pretrained(model_checkpoint)
-    optim = AdamW(model.parameters(), lr=2e-5)
+    optim = AdamW(model.parameters(), lr=learning_rate)
     train_dataloader = dataloader(is_train=True, batch_size=batch_size)
     model.to(device)
 
@@ -40,9 +41,9 @@ def train_sentimental_classifier(num_epochs=5, batch_size=16):
     return save_model_checkpoint
 
 
-def evaluate_sentimental_classifier(save_model_checkpoint):
+def evaluate_sentimental_classifier(save_model_checkpoint, batch_size=16):
     model = BertForSequenceClassification.from_pretrained(save_model_checkpoint)
-    test_dataloader = dataloader(is_train=False, batch_size=16)
+    test_dataloader = dataloader(is_train=False, batch_size=batch_size)
     model.to(device)
 
     preds, labels = list(), list()
@@ -68,6 +69,7 @@ def evaluate_sentimental_classifier(save_model_checkpoint):
 
 
 if __name__ == "__main__":
-    save_model_checkpoint = train_sentimental_classifier(num_epochs=5,
-                                                         batch_size=16)
-    evaluate_sentimental_classifier(save_model_checkpoint)
+    save_model_checkpoint = train_sentimental_classifier(num_epochs=cfg.num_epochs,
+                                                         batch_size=cfg.batch_size,
+                                                         learning_rate=cfg.learning_rate)
+    evaluate_sentimental_classifier(save_model_checkpoint, batch_size=cfg.batch_size)
