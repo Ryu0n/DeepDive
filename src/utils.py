@@ -12,6 +12,7 @@ polarity_map = {
 
 
 PLM_CLASSES = {
+    'klue/bert-base': [BertTokenizerFast, BertForTokenClassification],
     'bert-base-multilingual-cased': [BertTokenizerFast, BertForTokenClassification],
     'monologg/koelectra-base-v3-discriminator': [ElectraTokenizerFast, ElectraForTokenClassification]
 }

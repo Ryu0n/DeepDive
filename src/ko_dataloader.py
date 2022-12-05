@@ -66,7 +66,7 @@ def down_sampling(rows: list):
         total_sentiments = sum([sentiments.count(sent) for sent in [0, 1, 2, 3]])
         num_unrelated = sentiments.count(0)
         unrelated_ratio = num_unrelated / total_sentiments
-        if unrelated_ratio > 0.7:
+        if unrelated_ratio > 0.8 and 1 not in sentiments and 2 not in sentiments:
             continue
         sampled_rows.append([sentence_text, sentiments])
     return sampled_rows
@@ -142,8 +142,3 @@ def add_additional_data(tokenizer):
                 sentiments.append(sentiment)
             rows.append([sentence, sentiments])
         return rows
-
-
-if __name__ == "__main__":
-    for sentence_text, sentiments in read_train_dataset(write=True):
-        print(sentence_text, sentiments)
