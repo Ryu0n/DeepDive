@@ -28,7 +28,7 @@ def parse_json_dict(tokenizer, file_name: str):
         for sentence in sentences:
             sentence_text = sentence.get('sentence_form')
             opinions = sentence.get('opinions')
-            tokenized_text = tokenizer.encode_plus(sentence_text, return_offsets_mapping=True, padding='max_length')
+            tokenized_text = tokenizer.encode_plus(sentence_text, return_offsets_mapping=True, padding='max_length', truncation=True)
             tokenized_text_ids = tokenized_text.get('input_ids')
             tokenized_text_offsets = tokenized_text.get('offset_mapping')
             tokens = [vocab.get(tokenized_text_id) for tokenized_text_id in tokenized_text_ids]
@@ -80,8 +80,9 @@ def read_train_dataset(write=True, train_ratio=0.8):
     rows = parse_json_dict(tokenizer, file_name+'.json')
     additional_rows = add_additional_data(tokenizer)
     rows.extend(additional_rows)
+    rows = down_sampling(rows)
+    random.shuffle(rows)
     train_rows, test_rows = train_test_split(rows, train_ratio)
-    train_rows = down_sampling(train_rows)
 
     # save test text
     if write:
@@ -117,9 +118,9 @@ def add_additional_data(tokenizer):
         lines = f.readlines()
         for line in lines:
             line_dict = json.loads(line)
-            sentence = line_dict.get('data')
+            sentence = line_dict.get('data').replace('\n', ' ')
             labels = line_dict.get('label')
-            tokenized_text = tokenizer.encode_plus(sentence, return_offsets_mapping=True, padding='max_length')
+            tokenized_text = tokenizer.encode_plus(sentence, return_offsets_mapping=True, padding='max_length', truncation=True)
             tokenized_text_ids = tokenized_text.get('input_ids')
             tokenized_text_offsets = tokenized_text.get('offset_mapping')
             tokens = [vocab.get(tokenized_text_id) for tokenized_text_id in tokenized_text_ids]

@@ -46,7 +46,7 @@ class SentimentalPolarityDataset(Dataset):
     def _load_from_text(self):
         rows = source[self.lang][0]()
         for text, sentiments in rows:
-            output = self.tokenizer.encode_plus(text, return_tensors='pt', padding='max_length')
+            output = self.tokenizer.encode_plus(text, return_tensors='pt', padding='max_length', truncation=True)
             for k, v in output.items():
                 v = torch.squeeze(v)
                 self.data.get(k).append(v)
@@ -181,7 +181,7 @@ def evaluate_aspect_sentimental_classifier():
             if lang == 'ko':
                 sentence, sentiments = sentence
                 true_sentiments.append(sentiments)
-            inputs = tokenizer.encode_plus(sentence, return_tensors='pt', padding='max_length')
+            inputs = tokenizer.encode_plus(sentence, return_tensors='pt', padding='max_length', truncation=True)
             input_ids = inputs.get('input_ids')
             tokens = np.array([vocab.get(int(input_id)) for input_id in input_ids[0]])
             outputs = model(**inputs)
