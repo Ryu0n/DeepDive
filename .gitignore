@@ -1,7 +1,5 @@
 pytorch_model.bin
 config.json
-*.json
-*.txt
 .idea
 .DS_Store
 __pycache__
