@@ -4,10 +4,10 @@ from transformers import ElectraTokenizerFast, ElectraForTokenClassification
 from src.patterns import SingletonInstance
 
 polarity_map = {
-    'positive': 3,
-    'neutral': 2,
+    'unrelated': 0,
     'negative': 1,
-    'unrelated': 0
+    'neutral': 2,
+    'positive': 3,
 }
 
 

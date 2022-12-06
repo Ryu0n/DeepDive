@@ -11,13 +11,14 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from tqdm import tqdm
+from transformers import AdamW
 from collections import Counter
 from datasets import load_metric
+from torch.utils.data import DataLoader, Dataset
+from sklearn.metrics import classification_report
 from src.utils import polarity_map, Arguments
 from src.en_dataloader import read_train_xml, read_test_xml
 from src.ko_dataloader import read_train_dataset, read_test_dataset
-from torch.utils.data import DataLoader, Dataset
-from transformers import AdamW
 
 polarity_map_reverse = {v: k for k, v in polarity_map.items()}
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -160,7 +161,8 @@ def post_process(true_sentiments: np.ndarray, pred_sentiments: np.ndarray):
          for true_sentiment, pred_sentiment, in zip(true_sentiments, pred_sentiments)]
     )
 
-    return map(map_to_polarity_str, (filtered_true_sentiments, filtered_pred_sentiments))
+    # return map(map_to_polarity_str, (filtered_true_sentiments, filtered_pred_sentiments))
+    return filtered_true_sentiments, filtered_pred_sentiments
 
 
 def evaluate_aspect_sentimental_classifier():
@@ -214,9 +216,16 @@ def evaluate_aspect_sentimental_classifier():
 
     # https://huggingface.co/spaces/evaluate-metric/seqeval
     if lang == 'ko':
-        metric = load_metric("seqeval")
-        result = metric.compute(predictions=pred_sentiments, references=true_sentiments)
-        print(result)
+        # metric = load_metric("seqeval")
+        # result = metric.compute(predictions=pred_sentiments, references=true_sentiments)
+        # print(result)
+
+        report = classification_report(y_true=true_sentiments.flatten(),
+                                       y_pred=pred_sentiments.flatten(),
+                                       target_names=list(polarity_map.keys()))
+        with open('report.txt', 'w') as f:
+            f.write(report)
+            print(report)
 
 
 def clear_gpu_memory():
