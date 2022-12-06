@@ -10,6 +10,7 @@ import numpy as np
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
+from itertools import chain
 from tqdm import tqdm
 from transformers import AdamW
 from collections import Counter
@@ -146,22 +147,13 @@ def merge_tokens(filtered_tokens: np.ndarray, filtered_result: np.ndarray):
 
 
 def post_process(true_sentiments: np.ndarray, pred_sentiments: np.ndarray):
-    def map_to_polarity_str(filtered_sentiments: np.ndarray):
-        return np.array([
-            ['_' + polarity_map_reverse.get(s) for s in sentiment]
-            for sentiment in filtered_sentiments
-        ])
 
-    filtered_true_sentiments = np.array(
-        [sentiment[sentiment != -100]
-         for sentiment in true_sentiments]
-    )
-    filtered_pred_sentiments = np.array(
-        [np.array([p for t, p in zip(true_sentiment, pred_sentiment) if t != -100])
-         for true_sentiment, pred_sentiment, in zip(true_sentiments, pred_sentiments)]
-    )
+    filtered_true_sentiments = [sentiment[sentiment != -100] for sentiment in true_sentiments]
+    filtered_pred_sentiments = [[p for t, p in zip(true_sentiment, pred_sentiment) if t != -100] for true_sentiment, pred_sentiment, in zip(true_sentiments, pred_sentiments)]
 
-    # return map(map_to_polarity_str, (filtered_true_sentiments, filtered_pred_sentiments))
+    filtered_true_sentiments = np.array(list(chain(*filtered_true_sentiments)))
+    filtered_pred_sentiments = np.array(list(chain(*filtered_pred_sentiments)))
+
     return filtered_true_sentiments, filtered_pred_sentiments
 
 
@@ -211,15 +203,10 @@ def evaluate_aspect_sentimental_classifier():
 
     pred_sentiments = np.array(pred_sentiments)
     true_sentiments = np.array(true_sentiments)
-    true_sentiments, pred_sentiments = post_process(np.array(true_sentiments),
-                                                    np.array(pred_sentiments))
+    true_sentiments, pred_sentiments = post_process(true_sentiments, pred_sentiments)
 
     # https://huggingface.co/spaces/evaluate-metric/seqeval
     if lang == 'ko':
-        # metric = load_metric("seqeval")
-        # result = metric.compute(predictions=pred_sentiments, references=true_sentiments)
-        # print(result)
-
         report = classification_report(y_true=true_sentiments.flatten(),
                                        y_pred=pred_sentiments.flatten(),
                                        target_names=list(polarity_map.keys()))
