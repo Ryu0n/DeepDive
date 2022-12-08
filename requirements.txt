@@ -1,0 +1,7 @@
+numpy
+seqeval
+transformers
+datasets
+torch==1.7.1
+scikit-learn
+kiwipiepy
