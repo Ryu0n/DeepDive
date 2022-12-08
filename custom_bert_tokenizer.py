@@ -1,15 +1,12 @@
 import torch
-
 from utils import load_kiwi_pos_dict
 from typing import List, Dict
 from transformers import BertTokenizerFast
 from kiwipiepy import Kiwi
 
-kiwi_tokenizer = Kiwi()
-bert_tokenizer = BertTokenizerFast.from_pretrained('klue/bert-base')
-
 
 def __tokenize_by_kiwi(sentences: List[str]) -> List[List[Dict]]:
+    kiwi_tokenizer = Kiwi()
     kiwi_sentences_tokens = list(kiwi_tokenizer.tokenize(sentences))
     sentences_pos_spans = list()
     for kiwi_tokens in kiwi_sentences_tokens:
@@ -25,15 +22,16 @@ def __tokenize_by_kiwi(sentences: List[str]) -> List[List[Dict]]:
     return sentences_pos_spans
 
 
-def __tokenize_by_bert(sentences: List[str]):
+def __tokenize_by_bert(sentences: List[str], model_checkpoint: str):
+    bert_tokenizer = BertTokenizerFast.from_pretrained(model_checkpoint)
     inputs = bert_tokenizer(sentences,
                             return_offsets_mapping=True,
                             return_tensors='pt',
                             padding='max_length')
-    return inputs
+    return bert_tokenizer, inputs
 
 
-def tokenize(sentences: List[str]):
+def tokenize(sentences: List[str], model_checkpoint: str = 'klue/bert-base'):
     """
     Custom Tokenization
     """
@@ -45,7 +43,7 @@ def tokenize(sentences: List[str]):
     """
     BERT TOKENIZER
     """
-    inputs = __tokenize_by_bert(sentences)
+    bert_tokenizer, inputs = __tokenize_by_bert(sentences, model_checkpoint)
     # print(inputs)
 
     """
