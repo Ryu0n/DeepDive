@@ -164,8 +164,8 @@ def evaluate_aspect_sentimental_classifier():
             sentence, sentiments = sentence
             true_sentiments.append(sentiments)
             inputs = tokenize_func([sentence])
-            input_ids = inputs.get('input_ids')
-            tokens = np.array([vocab.get(int(input_id)) for input_id in input_ids[0]])
+            input_ids = inputs.get('input_ids')[0].tolist()
+            tokens = np.array([vocab.get(int(input_id)) for input_id in input_ids])
             outputs = model(**inputs)
             probs = torch.softmax(outputs.logits, dim=-1)
             result = np.array(torch.argmax(probs, dim=-1)[0])

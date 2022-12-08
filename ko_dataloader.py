@@ -31,8 +31,8 @@ def parse_json_dict(file_name: str, tokenizer, tokenize_func):
             opinions = sentence.get('opinions')
             # tokenized_text = tokenizer.encode_plus(sentence_text, return_offsets_mapping=True, padding='max_length', truncation=True)
             tokenized_text = tokenize_func([sentence_text])
-            tokenized_text_ids = tokenized_text.get('input_ids')[0]
-            tokenized_text_offsets = tokenized_text.get('offset_mapping')[0]
+            tokenized_text_ids = tokenized_text.get('input_ids')[0].tolist()
+            tokenized_text_offsets = tokenized_text.get('offset_mapping')[0].tolist()
             tokens = [vocab.get(tokenized_text_id) for tokenized_text_id in tokenized_text_ids]
             sentiments = []
 
@@ -67,8 +67,8 @@ def add_additional_data(tokenizer, tokenize_func):
             labels = line_dict.get('label')
             # tokenized_text = tokenizer.encode_plus(sentence, return_offsets_mapping=True, padding='max_length', truncation=True)
             tokenized_text = tokenize_func([sentence])
-            tokenized_text_ids = tokenized_text.get('input_ids')[0]
-            tokenized_text_offsets = tokenized_text.get('offset_mapping')[0]
+            tokenized_text_ids = tokenized_text.get('input_ids')[0].tolist()
+            tokenized_text_offsets = tokenized_text.get('offset_mapping')[0].tolist()
             tokens = [vocab.get(tokenized_text_id) for tokenized_text_id in tokenized_text_ids]
             sentiments = []
 
