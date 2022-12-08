@@ -31,7 +31,7 @@ def __tokenize_by_bert(sentences: List[str], model_checkpoint: str):
     return bert_tokenizer, inputs
 
 
-def tokenize(sentences: List[str], model_checkpoint: str = 'klue/bert-base'):
+def tokenize(model_checkpoint: str, sentences: List[str]):
     """
     Custom Tokenization
     """
