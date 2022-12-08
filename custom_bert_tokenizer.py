@@ -5,8 +5,7 @@ from transformers import BertTokenizerFast
 from kiwipiepy import Kiwi
 
 
-def __tokenize_by_kiwi(sentences: List[str]) -> List[List[Dict]]:
-    kiwi_tokenizer = Kiwi()
+def __tokenize_by_kiwi(kiwi_tokenizer: Kiwi, sentences: List[str]) -> List[List[Dict]]:
     kiwi_sentences_tokens = list(kiwi_tokenizer.tokenize(sentences))
     sentences_pos_spans = list()
     for kiwi_tokens in kiwi_sentences_tokens:
@@ -22,8 +21,7 @@ def __tokenize_by_kiwi(sentences: List[str]) -> List[List[Dict]]:
     return sentences_pos_spans
 
 
-def __tokenize_by_bert(sentences: List[str], model_checkpoint: str):
-    bert_tokenizer = BertTokenizerFast.from_pretrained(model_checkpoint)
+def __tokenize_by_bert(bert_tokenizer: BertTokenizerFast, sentences: List[str]):
     inputs = bert_tokenizer(sentences,
                             return_offsets_mapping=True,
                             return_tensors='pt',
@@ -32,20 +30,19 @@ def __tokenize_by_bert(sentences: List[str], model_checkpoint: str):
     return bert_tokenizer, inputs
 
 
-def tokenize(model_checkpoint: str, sentences: List[str]):
+def tokenize(bert_tokenizer: BertTokenizerFast, kiwi_tokenizer: Kiwi, sentences: List[str]):
     """
     Custom Tokenization
     """
     """
-    KIWI TOKENIZER
-    """
-    sentences_pos_spans = __tokenize_by_kiwi(sentences)
-
-    """
     BERT TOKENIZER
     """
-    bert_tokenizer, inputs = __tokenize_by_bert(sentences, model_checkpoint)
-    # print(inputs)
+    bert_tokenizer, inputs = __tokenize_by_bert(bert_tokenizer, sentences)
+
+    """
+    KIWI TOKENIZER
+    """
+    sentences_pos_spans = __tokenize_by_kiwi(kiwi_tokenizer, sentences)
 
     """
     POS TAGGING TO BERT TOKENS

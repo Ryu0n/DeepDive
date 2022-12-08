@@ -17,19 +17,22 @@ ex)
 git clone https://github.com/Ryu0nPrivateProject/POSBert.git
 ```
 ```python
+from transformers import BertTokenizerFast
+from kiwipiepy import Kiwi
 from custom_bert_tokenizer import tokenize
 from custom_bert import CustomBertForTokenClassification
+
 
 sentences = [
     '나는 사과를 먹었다.',
     '이번 이태원 대참사 진짜 장난 아니네..',
     '너무 힘든데 게임하는건 좋아유'
 ]
-
-inputs = tokenize(sentences=sentences)
+inputs = tokenize(bert_tokenizer=BertTokenizerFast.from_pretrained('klue/bert-base'),
+                  kiwi_tokenizer=Kiwi(),
+                  sentences=sentences)
 model = CustomBertForTokenClassification.from_pretrained('klue/bert-base', num_labels=4)
 outputs = model(**inputs)
-
 print(outputs)
 
 """

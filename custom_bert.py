@@ -6,7 +6,8 @@ from torch.nn import CrossEntropyLoss
 from transformers.modeling_outputs import BaseModelOutputWithPoolingAndCrossAttentions, TokenClassifierOutput
 
 from custom_bert_utils import load_kiwi_pos_dict
-from transformers import BertConfig, BertModel, BertForTokenClassification
+from transformers import BertConfig, BertModel, BertForTokenClassification, BertTokenizerFast
+from kiwipiepy import Kiwi
 
 
 class BertLayerNorm(nn.Module):
@@ -269,7 +270,9 @@ if __name__ == "__main__":
         '이번 이태원 대참사 진짜 장난 아니네..',
         '너무 힘든데 게임하는건 좋아유'
     ]
-    inputs = tokenize(sentences=sentences)
+    inputs = tokenize(bert_tokenizer=BertTokenizerFast.from_pretrained('klue/bert-base'),
+                      kiwi_tokenizer=Kiwi(),
+                      sentences=sentences)
     print(inputs)
     model = CustomBertForTokenClassification.from_pretrained('klue/bert-base', num_labels=4)
     outputs = model(**inputs)
