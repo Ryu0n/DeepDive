@@ -72,7 +72,7 @@ def tokenize(bert_tokenizer: BertTokenizerFast, kiwi_tokenizer: Kiwi, sentences:
                 if kiwi_start <= bert_token_start and bert_token_end <= kiwi_end and not is_appended:
                     pos_tags.append(
                         kiwi_pos_dict.get(
-                            pos_span.get('pos')
+                            pos_span.get('pos').replace('-R', '').replace('-I', '')
                         )
                     )
                     is_appended = True

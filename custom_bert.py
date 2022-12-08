@@ -266,14 +266,15 @@ if __name__ == "__main__":
     from custom_bert_tokenizer import tokenize
 
     sentences = [
-        '나는 사과를 먹었다.',
-        '이번 이태원 대참사 진짜 장난 아니네..',
-        '너무 힘든데 게임하는건 좋아유'
+        # '나는 사과를 먹었다.',
+        # '이번 이태원 대참사 진짜 장난 아니네..',
+        # '너무 힘든데 게임하는건 좋아유',
+        '둘쨋날은 미친듯이 밟아봤더니 기어가 헛돌면서 틱틱 소리가 나서 경악.',
     ]
     inputs = tokenize(bert_tokenizer=BertTokenizerFast.from_pretrained('klue/bert-base'),
                       kiwi_tokenizer=Kiwi(),
                       sentences=sentences)
-    print(inputs)
+    # print(inputs)
     model = CustomBertForTokenClassification.from_pretrained('klue/bert-base', num_labels=4)
     outputs = model(**inputs)
     print(outputs)
