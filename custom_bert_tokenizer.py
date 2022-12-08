@@ -76,6 +76,8 @@ def tokenize(bert_tokenizer: BertTokenizerFast, kiwi_tokenizer: Kiwi, sentences:
                         )
                     )
                     is_appended = True
+                if is_appended is False:
+                    pos_tags.append(kiwi_pos_dict.get("NOTHING"))
         sentences_pos_tags.append(pos_tags.copy())
     sentences_pos_tags = torch.tensor(sentences_pos_tags, dtype=torch.int64)
     inputs['pos_tag_ids'] = sentences_pos_tags
