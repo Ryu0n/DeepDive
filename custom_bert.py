@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch.nn import CrossEntropyLoss
 from transformers.modeling_outputs import BaseModelOutputWithPoolingAndCrossAttentions, TokenClassifierOutput
 
-from utils import load_kiwi_pos_dict
+from custom_bert_utils import load_kiwi_pos_dict
 from transformers import BertConfig, BertModel, BertForTokenClassification
 
 

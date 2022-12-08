@@ -1,5 +1,5 @@
 import torch
-from utils import load_kiwi_pos_dict
+from custom_bert_utils import load_kiwi_pos_dict
 from typing import List, Dict
 from transformers import BertTokenizerFast
 from kiwipiepy import Kiwi
