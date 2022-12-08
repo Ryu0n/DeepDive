@@ -43,6 +43,8 @@ class SentimentalPolarityDataset(Dataset):
         for text, sentiments in rows:
             output = self.tokenize_func([text])
             for k, v in output.items():
+                if k == 'offset_mapping':
+                    continue
                 v = torch.squeeze(v)
                 self.data.get(k).append(v)
             sentiments = torch.squeeze(torch.tensor(sentiments, dtype=torch.long))

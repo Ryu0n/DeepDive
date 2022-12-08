@@ -274,7 +274,7 @@ if __name__ == "__main__":
     inputs = tokenize(bert_tokenizer=BertTokenizerFast.from_pretrained('klue/bert-base'),
                       kiwi_tokenizer=Kiwi(),
                       sentences=sentences)
-    # print(inputs)
+    print(inputs)
     model = CustomBertForTokenClassification.from_pretrained('klue/bert-base', num_labels=4)
     outputs = model(**inputs)
-    print(outputs)
+    # print(outputs)
