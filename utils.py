@@ -1,8 +1,9 @@
-from src.patterns import SingletonInstance
-from src.POSBert.custom_bert import CustomBertForTokenClassification
-from src.POSBert.custom_bert_tokenizer import tokenize
+from patterns import SingletonInstance
+from custom_bert import CustomBertForTokenClassification
+from custom_bert_tokenizer import tokenize
 from functools import partial
 from transformers import BertTokenizerFast
+from kiwipiepy import Kiwi
 
 polarity_map = {
     'unrelated': 0,
@@ -35,6 +36,6 @@ class Arguments(SingletonInstance):
         self.tokenizer_name = self.args.tokenizer_name
         self.tokenizer = PLM_CLASSES.get(self.tokenizer_name)[0].from_pretrained(self.tokenizer_name)
         self.tokenize_func = PLM_CLASSES.get(self.tokenizer_name)[2]
-        self.tokenize_func = partial(self.tokenize_func, self.tokenizer_name)
-        if 'bert' in self.args.tokenizer:
+        self.tokenize_func = partial(self.tokenize_func, self.tokenizer, Kiwi())
+        if 'bert' in self.tokenizer_name:
             self.model_class = PLM_CLASSES.get(self.tokenizer_name)[1]

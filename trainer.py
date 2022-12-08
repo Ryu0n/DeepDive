@@ -16,8 +16,8 @@ from transformers import AdamW
 from collections import Counter
 from torch.utils.data import DataLoader, Dataset
 from sklearn.metrics import classification_report
-from src.utils import polarity_map, Arguments
-from src.ko_dataloader import read_train_dataset, read_test_dataset
+from utils import polarity_map, Arguments
+from ko_dataloader import read_train_dataset, read_test_dataset
 
 polarity_map_reverse = {v: k for k, v in polarity_map.items()}
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -28,7 +28,7 @@ source = {
 
 class SentimentalPolarityDataset(Dataset):
     def __init__(self):
-        self.tokenizer_func = Arguments.instance().tokenizer_func
+        self.tokenize_func = Arguments.instance().tokenize_func
         self.data = {
             'input_ids': [],
             'attention_mask': [],
@@ -41,7 +41,7 @@ class SentimentalPolarityDataset(Dataset):
     def _load_from_text(self):
         rows = source['ko'][0]()
         for text, sentiments in rows:
-            output = self.tokenizer_func([text])
+            output = self.tokenize_func([text])
             for k, v in output.items():
                 v = torch.squeeze(v)
                 self.data.get(k).append(v)
