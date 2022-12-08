@@ -13,6 +13,7 @@ def __tokenize_by_kiwi(kiwi_tokenizer: Kiwi, sentences: List[str]) -> List[List[
         for token in kiwi_tokens:
             pos_spans.append(
                 {
+                    'token': token.form,
                     'span': [token.start, token.end],
                     'pos': token.tag
                 }
@@ -65,14 +66,16 @@ def tokenize(bert_tokenizer: BertTokenizerFast, kiwi_tokenizer: Kiwi, sentences:
                 continue
             bert_token_start, bert_token_end = token[-1]
             pos_spans = sentences_pos_spans[sentence_index]
+            is_appended = False
             for pos_span in pos_spans:
                 kiwi_start, kiwi_end = pos_span.get('span')
-                if kiwi_start <= bert_token_start and bert_token_end <= kiwi_end:
+                if kiwi_start <= bert_token_start and bert_token_end <= kiwi_end and not is_appended:
                     pos_tags.append(
                         kiwi_pos_dict.get(
                             pos_span.get('pos')
                         )
                     )
+                    is_appended = True
         sentences_pos_tags.append(pos_tags.copy())
     sentences_pos_tags = torch.tensor(sentences_pos_tags, dtype=torch.int64)
     inputs['pos_tag_ids'] = sentences_pos_tags
