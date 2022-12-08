@@ -27,7 +27,8 @@ def __tokenize_by_bert(sentences: List[str], model_checkpoint: str):
     inputs = bert_tokenizer(sentences,
                             return_offsets_mapping=True,
                             return_tensors='pt',
-                            padding='max_length')
+                            padding='max_length',
+                            truncation=True)
     return bert_tokenizer, inputs
 
 
