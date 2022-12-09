@@ -118,7 +118,7 @@ def read_train_dataset(write=True, train_ratio=0.8):
     additional_rows = add_additional_data(tokenizer, tokenize_func)
     rows.extend(additional_rows)
     rows = down_sampling(rows)
-    random.shuffle(rows)
+    # random.shuffle(rows)
     train_rows, test_rows = train_test_split(rows, train_ratio)
 
     # save test text
