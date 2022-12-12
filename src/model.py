@@ -14,39 +14,31 @@ from itertools import chain
 from tqdm import tqdm
 from transformers import AdamW
 from collections import Counter
-from datasets import load_metric
 from torch.utils.data import DataLoader, Dataset
 from sklearn.metrics import classification_report
 from src.utils import polarity_map, Arguments
-from src.en_dataloader import read_train_xml, read_test_xml
 from src.ko_dataloader import read_train_dataset, read_test_dataset
 
 polarity_map_reverse = {v: k for k, v in polarity_map.items()}
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 source = {
-    'en': [read_train_xml, read_test_xml],
     'ko': [read_train_dataset, read_test_dataset]
 }
 
 
 class SentimentalPolarityDataset(Dataset):
     def __init__(self):
-        self.lang = Arguments.instance().args.lang
-        self.model_class = Arguments.instance().model_class
-        self.tokenizer_class = Arguments.instance().tokenizer_class
-        self.model_path = Arguments.instance().args.model_path
-        self.tokenizer_name = Arguments.instance().args.tokenizer
         self.data = {
             'input_ids': [],
             'attention_mask': [],
             'token_type_ids': [],
             'labels': []
         }
-        self.tokenizer = self.tokenizer_class.from_pretrained(self.tokenizer_name, num_labels=4)
+        self.tokenizer = Arguments.instance().tokenizer
         self._load_from_text()
 
     def _load_from_text(self):
-        rows = source[self.lang][0]()
+        rows = source['ko'][0]()
         for text, sentiments in rows:
             output = self.tokenizer.encode_plus(text, return_tensors='pt', padding='max_length', truncation=True)
             for k, v in output.items():
@@ -63,9 +55,8 @@ class SentimentalPolarityDataset(Dataset):
 
 
 def train_aspect_sentimental_classifier(epochs=5):
-    lang = Arguments.instance().args.lang
-    model_path = Arguments.instance().args.model_path
-    tokenizer_name = Arguments.instance().args.tokenizer
+    model_path = Arguments.instance().model_path
+    tokenizer_name = Arguments.instance().tokenizer_name
     model_path = tokenizer_name if model_path is None else model_path
     model_class = Arguments.instance().model_class
     dataset = SentimentalPolarityDataset()
@@ -96,12 +87,12 @@ def train_aspect_sentimental_classifier(epochs=5):
         elif 'electra' in tokenizer_name:
             m = 'electra'
         avg_train_loss = total_loss / len(dataloader)
-        checkpoint = f'{lang}_{m}_token_cls_epoch_{epoch}_loss_{avg_train_loss}.pt'
+        checkpoint = f'{m}_token_cls_epoch_{epoch}_loss_{avg_train_loss}.pt'
         if avg_train_loss < lowest_loss:
             model_path = checkpoint
             lowest_loss = loss_val
         model.save_pretrained(checkpoint)
-    Arguments.instance().args.model_path = model_path
+    Arguments.instance().model_path = model_path
 
 
 def merge_tokens(filtered_tokens: np.ndarray, filtered_result: np.ndarray):
@@ -158,23 +149,19 @@ def post_process(true_sentiments: np.ndarray, pred_sentiments: np.ndarray):
 
 
 def evaluate_aspect_sentimental_classifier():
-    lang = Arguments.instance().args.lang
-    model_path = Arguments.instance().args.model_path
-    tokenizer_name = Arguments.instance().args.tokenizer
+    model_path = Arguments.instance().model_path
     model_class = Arguments.instance().model_class
-    tokenizer_class = Arguments.instance().tokenizer_class
+    tokenizer = Arguments.instance().tokenizer
     model = model_class.from_pretrained(model_path)
     model.eval()
-    tokenizer = tokenizer_class.from_pretrained(tokenizer_name)
     vocab = tokenizer.get_vocab()
     vocab = {v: k for k, v in vocab.items()}
-    sentences = source[lang][1]()
+    sentences = source['ko'][1]()
     pred_sentiments, true_sentiments = [], []
     for i, sentence in enumerate(sentences):
         with torch.no_grad():
-            if lang == 'ko':
-                sentence, sentiments = sentence
-                true_sentiments.append(sentiments)
+            sentence, sentiments = sentence
+            true_sentiments.append(sentiments)
             inputs = tokenizer.encode_plus(sentence, return_tensors='pt', padding='max_length', truncation=True)
             input_ids = inputs.get('input_ids')
             tokens = np.array([vocab.get(int(input_id)) for input_id in input_ids[0]])
@@ -205,12 +192,11 @@ def evaluate_aspect_sentimental_classifier():
     true_sentiments = np.array(true_sentiments)
     true_sentiments, pred_sentiments = post_process(true_sentiments, pred_sentiments)
 
-    # https://huggingface.co/spaces/evaluate-metric/seqeval
-    if lang == 'ko':
-        report = classification_report(y_true=true_sentiments.flatten(),
-                                       y_pred=pred_sentiments.flatten(),
-                                       target_names=list(polarity_map.keys()))
-        with open('report.txt', 'w') as f:
+    report = classification_report(y_true=true_sentiments.flatten(),
+                                   y_pred=pred_sentiments.flatten(),
+                                   target_names=list(polarity_map.keys()),
+                                   labels=list(polarity_map.values()))
+    with open('report.txt', 'w') as f:
             f.write(report)
             print(report)
 
@@ -227,9 +213,8 @@ if __name__ == "__main__":
 
     parser.add_argument('--train', required=True)
     parser.add_argument('--eval', required=True, help='if --eval is True, you must pass --model_path')
-    parser.add_argument('--lang', required=False, default='en')
     parser.add_argument('--model_path', required=False, default=None)
-    parser.add_argument('--tokenizer', required=True)
+    parser.add_argument('--tokenizer_name', required=True)
 
     args = parser.parse_args()
     args = Arguments.instance(args)

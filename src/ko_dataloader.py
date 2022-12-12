@@ -26,7 +26,7 @@ def parse_json_dict(tokenizer, file_name: str):
     for document in documents:
         sentences = document.get('sentence')
         for sentence in sentences:
-            sentence_text = sentence.get('sentence_form')
+            sentence_text = sentence.get('sentence_form').replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
             opinions = sentence.get('opinions')
             tokenized_text = tokenizer.encode_plus(sentence_text, return_offsets_mapping=True, padding='max_length', truncation=True)
             tokenized_text_ids = tokenized_text.get('input_ids')
@@ -53,10 +53,40 @@ def parse_json_dict(tokenizer, file_name: str):
     return rows
 
 
-def train_test_split(rows: list, train_ratio: float):
-    train_size = int(len(rows) * train_ratio)
-    train_rows, test_rows = rows[:train_size], rows[train_size:]
-    return train_rows, test_rows
+def add_additional_data(tokenizer):
+    vocab = tokenizer.get_vocab()
+    vocab = {v: k for k, v in vocab.items()}  # id : word
+    rows = []
+    file_name = 'ABSA_negative_and_neutral_token_all_10000.jsonl'
+    with open(_get_json_file(file_name), 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            line_dict = json.loads(line)
+            sentence = line_dict.get('data').replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
+            labels = line_dict.get('label')
+            tokenized_text = tokenizer.encode_plus(sentence, return_offsets_mapping=True, padding='max_length', truncation=True)
+            tokenized_text_ids = tokenized_text.get('input_ids')
+            tokenized_text_offsets = tokenized_text.get('offset_mapping')
+            tokens = [vocab.get(tokenized_text_id) for tokenized_text_id in tokenized_text_ids]
+            sentiments = []
+
+            for i, token in enumerate(tokens):
+                sentiment = polarity_map.get('unrelated')
+                token_offset = tokenized_text_offsets[i]
+
+                if token not in tokenizer.special_tokens_map.values():
+                    for opinion in labels:
+                        polarity = opinion[2]
+                        start = int(opinion[0])
+                        end = int(opinion[1])
+                        if start <= token_offset[0] < end:
+                            sentiment = polarity_map.get(polarity)
+                else:
+                    sentiment = nn.CrossEntropyLoss().ignore_index  # -100
+
+                sentiments.append(sentiment)
+            rows.append([sentence, sentiments])
+        return rows
 
 
 def down_sampling(rows: list):
@@ -72,10 +102,14 @@ def down_sampling(rows: list):
     return sampled_rows
 
 
+def train_test_split(rows: list, train_ratio: float):
+    train_size = int(len(rows) * train_ratio)
+    train_rows, test_rows = rows[:train_size], rows[train_size:]
+    return train_rows, test_rows
+
+
 def read_train_dataset(write=True, train_ratio=0.8):
-    tokenizer_class = Arguments.instance().tokenizer_class
-    tokenizer_name = Arguments.instance().args.tokenizer
-    tokenizer = tokenizer_class.from_pretrained(tokenizer_name)
+    tokenizer = Arguments.instance().tokenizer
     file_name = 'sample'
     rows = parse_json_dict(tokenizer, file_name+'.json')
     additional_rows = add_additional_data(tokenizer)
@@ -108,38 +142,3 @@ def read_test_dataset():
             sentiments = sentiments.split(' ')
             sentiments = list(map(int, sentiments))
             yield sentence_text, sentiments
-
-
-def add_additional_data(tokenizer):
-    vocab = tokenizer.get_vocab()
-    vocab = {v: k for k, v in vocab.items()}  # id : word
-    rows = []
-    with open(_get_json_file('ABSA_negative_token_labeling_data.jsonl'), 'r') as f:
-        lines = f.readlines()
-        for line in lines:
-            line_dict = json.loads(line)
-            sentence = line_dict.get('data').replace('\n', ' ')
-            labels = line_dict.get('label')
-            tokenized_text = tokenizer.encode_plus(sentence, return_offsets_mapping=True, padding='max_length', truncation=True)
-            tokenized_text_ids = tokenized_text.get('input_ids')
-            tokenized_text_offsets = tokenized_text.get('offset_mapping')
-            tokens = [vocab.get(tokenized_text_id) for tokenized_text_id in tokenized_text_ids]
-            sentiments = []
-
-            for i, token in enumerate(tokens):
-                sentiment = polarity_map.get('unrelated')
-                token_offset = tokenized_text_offsets[i]
-
-                if token not in tokenizer.special_tokens_map.values():
-                    for opinion in labels:
-                        polarity = opinion[2]
-                        start = int(opinion[0])
-                        end = int(opinion[1])
-                        if start <= token_offset[0] < end:
-                            sentiment = polarity_map.get(polarity)
-                else:
-                    sentiment = nn.CrossEntropyLoss().ignore_index  # -100
-
-                sentiments.append(sentiment)
-            rows.append([sentence, sentiments])
-        return rows
