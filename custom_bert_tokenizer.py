@@ -53,7 +53,7 @@ def tokenize(bert_tokenizer: BertTokenizerFast, kiwi_tokenizer: Kiwi, sentences:
     id_to_token_vocab = {v: k for k, v in token_to_id_vocab.items()}
     sentences_offsets = inputs.get('offset_mapping')
     special_tokens = bert_tokenizer.special_tokens_map.values()
-    kiwi_pos_dict = load_kiwi_pos_dict()
+    kiwi_pos_dict = load_kiwi_pos_dict(noun=True)
     sentences_pos_tags = list()
     for sentence_index, (input_ids, offsets) in enumerate(zip(sentences_input_ids, sentences_offsets)):
         input_ids = input_ids.tolist()

@@ -62,7 +62,7 @@ class CustomBertEmbeddings(nn.Module):
 class CustomBertModel(BertModel):
     def __init__(self, config: BertConfig):
         config_dict = config.to_dict()
-        config_dict['pos_tag_size'] = len(load_kiwi_pos_dict())
+        config_dict['pos_tag_size'] = len(load_kiwi_pos_dict(noun=True))
         self.config = BertConfig.from_dict(config_dict)
         super(CustomBertModel, self).__init__(self.config)
         self.embeddings = CustomBertEmbeddings(self.config)
@@ -202,7 +202,7 @@ class CustomBertModel(BertModel):
 class CustomBertForTokenClassification(BertForTokenClassification):
     def __init__(self, config: BertConfig):
         config_dict = config.to_dict()
-        config_dict['pos_tag_size'] = len(load_kiwi_pos_dict())
+        config_dict['pos_tag_size'] = len(load_kiwi_pos_dict(noun=True))
         self.config = BertConfig.from_dict(config_dict)
         super(CustomBertForTokenClassification, self).__init__(self.config)
         self.bert = CustomBertModel(self.config)
