@@ -77,7 +77,7 @@ def add_additional_data(tokenizer):
 
                 if token not in tokenizer.special_tokens_map.values():
                     for opinion in labels:
-                        polarity = opinion[2]
+                        polarity = opinion[2].lower()
                         start = int(opinion[0])
                         end = int(opinion[1])
                         if start <= token_offset[0] < end:
