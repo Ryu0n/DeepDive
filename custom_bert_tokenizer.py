@@ -73,7 +73,8 @@ def tokenize(bert_tokenizer: BertTokenizerFast, kiwi_tokenizer: Kiwi, sentences:
                     pos = pos_span.get('pos').replace('-R', '').replace('-I', '')
                     pos_tag = kiwi_pos_dict.get(pos)
                     pos_tags.append(
-                        pos_tag if pos_tag is not None else kiwi_pos_dict.get("NOTHING")
+                        # pos_tag if pos_tag is not None else kiwi_pos_dict.get("NOTHING")
+                        kiwi_pos_dict.get('N') if pos_tag.startswith('N') else kiwi_pos_dict.get("NOTHING")
                     )
                     is_appended = True
             if is_appended is False:

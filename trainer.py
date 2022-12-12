@@ -195,7 +195,8 @@ def evaluate_aspect_sentimental_classifier():
 
     report = classification_report(y_true=true_sentiments.flatten(),
                                    y_pred=pred_sentiments.flatten(),
-                                   target_names=list(polarity_map.keys()))
+                                   target_names=list(polarity_map.keys()),
+                                   labels=[v for v in polarity_map.values()])
     with open('report.txt', 'w') as f:
         f.write(report)
         print(report)

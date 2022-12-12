@@ -6,6 +6,7 @@ def load_kiwi_pos_dict(noun: bool = False) -> dict:
         json_val = '\n'.join(map(lambda line: line.replace('\n', ''), f.readlines()))
         kiwi_pos_dict = json.loads(json_val)
         if noun:
-            tags = [k for k in kiwi_pos_dict.keys() if k.startswith('N')]
-            return {k: i for i, k in enumerate(tags)}
+            # tags = [k for k in kiwi_pos_dict.keys() if k.startswith('N')]
+            # return {k: i for i, k in enumerate(tags)}
+            return {"N": 0, "NOTHING": 1}
         return kiwi_pos_dict
