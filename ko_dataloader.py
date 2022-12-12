@@ -59,7 +59,9 @@ def add_additional_data(tokenizer, tokenize_func):
     vocab = tokenizer.get_vocab()
     vocab = {v: k for k, v in vocab.items()}  # id : word
     rows = []
-    with open(_get_json_file('ABSA_negative_token_labeling_data.jsonl'), 'r') as f:
+    # file_name = 'ABSA_negative_token_labeling_data.jsonl'
+    file_name = 'ABSA_negative_and_neutral_token_all_10000.jsonl'
+    with open(_get_json_file(file_name), 'r') as f:
         lines = f.readlines()
         for line in tqdm(lines):
             line_dict = json.loads(line)
@@ -118,7 +120,7 @@ def read_train_dataset(write=True, train_ratio=0.8):
     additional_rows = add_additional_data(tokenizer, tokenize_func)
     rows.extend(additional_rows)
     rows = down_sampling(rows)
-    # random.shuffle(rows)
+    random.shuffle(rows)
     train_rows, test_rows = train_test_split(rows, train_ratio)
 
     # save test text
