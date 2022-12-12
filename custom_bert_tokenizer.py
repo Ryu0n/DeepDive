@@ -28,7 +28,7 @@ def __tokenize_by_bert(bert_tokenizer: BertTokenizerFast, sentences: List[str]):
                             return_tensors='pt',
                             padding='max_length',
                             truncation=True)
-    return bert_tokenizer, inputs
+    return inputs
 
 
 def tokenize(bert_tokenizer: BertTokenizerFast, kiwi_tokenizer: Kiwi, sentences: List[str]):
@@ -38,7 +38,7 @@ def tokenize(bert_tokenizer: BertTokenizerFast, kiwi_tokenizer: Kiwi, sentences:
     """
     BERT TOKENIZER
     """
-    bert_tokenizer, inputs = __tokenize_by_bert(bert_tokenizer, sentences)
+    inputs = __tokenize_by_bert(bert_tokenizer, sentences)
 
     """
     KIWI TOKENIZER
@@ -70,10 +70,10 @@ def tokenize(bert_tokenizer: BertTokenizerFast, kiwi_tokenizer: Kiwi, sentences:
             for pos_span in pos_spans:
                 kiwi_start, kiwi_end = pos_span.get('span')
                 if kiwi_start <= bert_token_start and bert_token_end <= kiwi_end and not is_appended:
+                    pos = pos_span.get('pos').replace('-R', '').replace('-I', '')
+                    pos_tag = kiwi_pos_dict.get(pos)
                     pos_tags.append(
-                        kiwi_pos_dict.get(
-                            pos_span.get('pos').replace('-R', '').replace('-I', '')
-                        )
+                        pos_tag if pos_tag is not None else kiwi_pos_dict.get("NOTHING")
                     )
                     is_appended = True
             if is_appended is False:
