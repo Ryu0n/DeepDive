@@ -2,6 +2,7 @@ import os
 import json
 import random
 import torch.nn as nn
+from tqdm import tqdm
 from src.utils import Arguments
 from src.utils import polarity_map
 
@@ -23,7 +24,7 @@ def parse_json_dict(tokenizer, file_name: str):
     json_dict = _load_json_dict(file_name)
     documents = json_dict.get('document')
     rows = []
-    for document in documents:
+    for document in tqdm(documents):
         sentences = document.get('sentence')
         for sentence in sentences:
             sentence_text = sentence.get('sentence_form').replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
@@ -60,7 +61,7 @@ def add_additional_data(tokenizer):
     file_name = 'ABSA_negative_and_neutral_token_all_10000.jsonl'
     with open(_get_json_file(file_name), 'r') as f:
         lines = f.readlines()
-        for line in lines:
+        for line in tqdm(lines):
             line_dict = json.loads(line)
             sentence = line_dict.get('data').replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
             labels = line_dict.get('label')
