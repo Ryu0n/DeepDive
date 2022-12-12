@@ -27,7 +27,7 @@ def parse_json_dict(file_name: str, tokenizer, tokenize_func):
     for document in tqdm(documents, leave=True):
         sentences = document.get('sentence')
         for sentence in sentences:
-            sentence_text = sentence.get('sentence_form')
+            sentence_text = sentence.get('sentence_form').replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
             opinions = sentence.get('opinions')
             # tokenized_text = tokenizer.encode_plus(sentence_text, return_offsets_mapping=True, padding='max_length', truncation=True)
             tokenized_text = tokenize_func([sentence_text])
@@ -65,7 +65,7 @@ def add_additional_data(tokenizer, tokenize_func):
         lines = f.readlines()
         for line in tqdm(lines):
             line_dict = json.loads(line)
-            sentence = line_dict.get('data').replace('\n', ' ')
+            sentence = line_dict.get('data').replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')
             labels = line_dict.get('label')
             # tokenized_text = tokenizer.encode_plus(sentence, return_offsets_mapping=True, padding='max_length', truncation=True)
             tokenized_text = tokenize_func([sentence])
