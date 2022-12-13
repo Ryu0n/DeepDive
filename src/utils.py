@@ -1,5 +1,6 @@
 from transformers import BertTokenizerFast, BertForTokenClassification
 from transformers import ElectraTokenizerFast, ElectraForTokenClassification
+from transformers import ElectraTokenizerFast, AutoModelForTokenClassification
 
 from src.patterns import SingletonInstance
 
@@ -14,7 +15,8 @@ polarity_map = {
 PLM_CLASSES = {
     'klue/bert-base': [BertTokenizerFast, BertForTokenClassification],
     'bert-base-multilingual-cased': [BertTokenizerFast, BertForTokenClassification],
-    'monologg/koelectra-base-v3-discriminator': [ElectraTokenizerFast, ElectraForTokenClassification]
+    'monologg/koelectra-base-v3-discriminator': [ElectraTokenizerFast, ElectraForTokenClassification],
+    "beomi/KcELECTRA-base-v2022": [ElectraTokenizerFast, ElectraForTokenClassification]
 }
 
 
