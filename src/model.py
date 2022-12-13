@@ -82,9 +82,9 @@ def train_aspect_sentimental_classifier(epochs=5):
             loop.set_description(f'Epoch {epoch}')
             loop.set_postfix(loss=loss_val)
         m = ''
-        if 'bert' in tokenizer_name:
+        if 'bert' in tokenizer_name.lower():
             m = 'bert'
-        elif 'electra' in tokenizer_name:
+        elif 'electra' in tokenizer_name.lower():
             m = 'electra'
         avg_train_loss = total_loss / len(dataloader)
         checkpoint = f'{m}_token_cls_epoch_{epoch}_loss_{avg_train_loss}.pt'

@@ -97,7 +97,9 @@ def down_sampling(rows: list):
         total_sentiments = sum([sentiments.count(sent) for sent in [0, 1, 2, 3]])
         num_unrelated = sentiments.count(0)
         unrelated_ratio = num_unrelated / total_sentiments
-        if unrelated_ratio > 0.8 and 1 not in sentiments and 2 not in sentiments:
+        if 1 not in sentiments and 3 not in sentiments:
+            continue
+        if unrelated_ratio > 0.8:
             continue
         sampled_rows.append([sentence_text, sentiments])
     return sampled_rows
