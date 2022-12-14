@@ -148,14 +148,74 @@ def post_process(true_sentiments: np.ndarray, pred_sentiments: np.ndarray):
     return filtered_true_sentiments, filtered_pred_sentiments
 
 
+def show_merged_sentence(sentence: str, result: np.ndarray):
+    tokenizer = Arguments.instance().tokenizer
+    inputs = tokenizer.encode_plus(sentence,
+                                   return_tensors='pt',
+                                   padding='max_length',
+                                   truncation=True,
+                                   return_offsets_mapping=True)
+    tokens, offsets = inputs.tokens(), inputs.get('offset_mapping').tolist()[0]
+    chunks, chunk, curr_sentiment = list(), list(), result[1]  # 0 is [CLS]
+    for token, sentiment, offset in zip(tokens, result, offsets):
+        if token in tokenizer.special_tokens_map.values():
+            continue
+        if curr_sentiment != sentiment:
+            chunk.append(curr_sentiment)
+            chunks.append(chunk.copy())
+            chunk = list()
+        chunk.append((token, offset))
+        curr_sentiment = sentiment
+    if len(chunk) > 0:
+        chunk.append(curr_sentiment)
+        chunks.append(chunk.copy())
+
+    end_index, merged_token_dicts = 0, list()
+    for chunk in chunks:
+        merged_token = ''
+        span_indices = list()
+        tokens, sentiment = chunk[:-1], chunk[-1]
+        for token, offset in tokens:
+            start, end = offset
+            gap = ' '*(start - end_index)
+            merged_token += f'{gap}{token}'
+            span_indices.extend(offset)
+            end_index = end
+        span_indices = [min(span_indices), max(span_indices)]
+        merged_token_dict = {
+            'merged_token': merged_token.strip().replace('##', ''),
+            'span_indices': span_indices,
+            'sentiment': sentiment
+        }
+        print(merged_token_dict)
+        merged_token_dicts.append(merged_token_dict)
+
+    merged_sentence, end_index = '', 0
+    for merged_token_dict in merged_token_dicts:
+        start, end = merged_token_dict.get('span_indices')
+        gap = ' '*(start - end_index)
+        if merged_token_dict.get('sentiment') != 'unrelated':
+            merged_token = f'[{merged_token_dict.get("merged_token")} : {merged_token_dict.get("sentiment")}]'
+        else:
+            merged_token = merged_token_dict.get("merged_token")
+        merged_sentence += f'{gap}{merged_token}'
+        end_index = end
+    print(merged_sentence)
+    return {
+        "origin_sentence": sentence,
+        "merged_sentence": merged_sentence,
+        "spans": merged_token_dicts
+    }
+
+
 def evaluate_aspect_sentimental_classifier():
     model_path = Arguments.instance().model_path
     model_class = Arguments.instance().model_class
     tokenizer = Arguments.instance().tokenizer
     model = model_class.from_pretrained(model_path)
     model.eval()
-    vocab = tokenizer.get_vocab()
-    vocab = {v: k for k, v in vocab.items()}
+    # vocab = tokenizer.get_vocab()
+    # vocab = {v: k for k, v in vocab.items()}
     sentences = source['ko'][1]()
     pred_sentiments, true_sentiments = [], []
     for i, sentence in enumerate(sentences):
@@ -163,30 +223,31 @@ def evaluate_aspect_sentimental_classifier():
             sentence, sentiments = sentence
             true_sentiments.append(sentiments)
             inputs = tokenizer.encode_plus(sentence, return_tensors='pt', padding='max_length', truncation=True)
-            input_ids = inputs.get('input_ids')
-            tokens = np.array([vocab.get(int(input_id)) for input_id in input_ids[0]])
+            # input_ids = inputs.get('input_ids')
+            # tokens = np.array([vocab.get(int(input_id)) for input_id in input_ids[0]])
             outputs = model(**inputs)
             probs = torch.softmax(outputs.logits, dim=-1)
             result = np.array(torch.argmax(probs, dim=-1)[0])
             pred_sentiments.append(result)
             result = np.array(list(map(lambda elem: polarity_map_reverse.get(elem), result)))
 
-            # Display results in string
-            filtered_tokens = tokens[
-                (tokens != '[CLS]')
-                & (tokens != '[UNK]')
-                & (tokens != '[SEP]')
-                & (tokens != '[PAD]')
-                ]
-            filtered_result = result[
-                (tokens != '[CLS]')
-                & (tokens != '[UNK]')
-                & (tokens != '[SEP]')
-                & (tokens != '[PAD]')
-                ]
-
             print('\n', sentence)
-            merge_tokens(filtered_tokens, filtered_result)
+            show_merged_sentence(sentence, result)
+
+            # Display results in string
+            # filtered_tokens = tokens[
+            #     (tokens != '[CLS]')
+            #     & (tokens != '[UNK]')
+            #     & (tokens != '[SEP]')
+            #     & (tokens != '[PAD]')
+            #     ]
+            # filtered_result = result[
+            #     (tokens != '[CLS]')
+            #     & (tokens != '[UNK]')
+            #     & (tokens != '[SEP]')
+            #     & (tokens != '[PAD]')
+            #     ]
+            # merge_tokens(filtered_tokens, filtered_result)
 
     pred_sentiments = np.array(pred_sentiments)
     true_sentiments = np.array(true_sentiments)

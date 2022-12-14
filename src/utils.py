@@ -29,4 +29,12 @@ class Arguments(SingletonInstance):
         self.tokenizer_name = self.args.tokenizer_name
         self.tokenizer_class = PLM_CLASSES.get(self.tokenizer_name)[0]
         self.tokenizer = self.tokenizer_class.from_pretrained(self.tokenizer_name)
-        self.model_class = PLM_CLASSES.get(self.model_path)[1]
+        self.model_class = PLM_CLASSES.get(self.model_path)
+        if self.model_class is not None:
+            self.model_class = self.model_class[1]
+        else:
+            if 'bert' in self.model_path.lower():
+                self.model_class = BertForTokenClassification
+            elif 'electra' in self.model_path.lower():
+                self.model_class = ElectraForTokenClassification
+
