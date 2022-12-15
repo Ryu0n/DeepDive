@@ -1,5 +1,7 @@
 numpy
 seqeval
+fastapi
+uvicorn[standard]
 transformers
 datasets
 torch==1.7.1
