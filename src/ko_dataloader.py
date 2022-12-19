@@ -99,7 +99,7 @@ def down_sampling(rows: list):
         unrelated_ratio = num_unrelated / total_sentiments
         if 1 not in sentiments and 3 not in sentiments:
             continue
-        if unrelated_ratio > 0.8:
+        if unrelated_ratio > 0.85:
             continue
         sampled_rows.append([sentence_text, sentiments])
     return sampled_rows
@@ -111,7 +111,7 @@ def train_test_split(rows: list, train_ratio: float):
     return train_rows, test_rows
 
 
-def read_train_dataset(write=True, train_ratio=0.8):
+def read_train_dataset(write=True, train_ratio=0.9):
     tokenizer = Arguments.instance().tokenizer
     file_name = 'sample'
     rows = parse_json_dict(tokenizer, file_name+'.json')

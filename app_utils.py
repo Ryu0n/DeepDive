@@ -62,12 +62,10 @@ def show_merged_sentence(tokenizer: ElectraTokenizerFast, sentence: str, result:
 
 
 async def calculate_sentimental_score(target_keyword: str, tag_informs: list):
-
     document_sentiments = list()
     for tag_info in tag_informs:
         sentiments = list()
         spans = tag_info.get('spans')
-
         for span in spans:
             merged_token = span.get('merged_token')
             if target_keyword in merged_token:

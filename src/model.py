@@ -187,7 +187,7 @@ def show_merged_sentence(sentence: str, result: np.ndarray):
             'span_indices': span_indices,
             'sentiment': sentiment
         }
-        print(merged_token_dict)
+        # print(merged_token_dict)
         merged_token_dicts.append(merged_token_dict)
 
     merged_sentence, end_index = '', 0
