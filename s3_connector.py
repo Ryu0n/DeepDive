@@ -29,10 +29,9 @@ def upload_model_checkpoint(file_name: str, version: str = '1.0.0'):
     """
     def compress_model_checkpoint(file_name: str):
         compressed_filename = f'{os.path.basename(file_name)}_{version}.tar.gz'
-        subprocess.run(['tar',
-                        '-zcvf',
-                        compressed_filename,
-                        file_name])
+        subprocess.run([
+            'tar', '-zcvf', compressed_filename, file_name
+        ])
         return compressed_filename
 
     compressed_filename = compress_model_checkpoint(file_name)
