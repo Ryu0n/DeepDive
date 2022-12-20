@@ -87,7 +87,7 @@ def train_aspect_sentimental_classifier(epochs=5):
         elif 'electra' in tokenizer_name.lower():
             m = 'electra'
         avg_train_loss = total_loss / len(dataloader)
-        checkpoint = f'{m}_token_cls_epoch_{epoch}_loss_{avg_train_loss}.pt'
+        checkpoint = f'{m}_token_cls_epoch_{epoch}_loss_{round(avg_train_loss, 3)}.pt'
         if avg_train_loss < lowest_loss:
             model_path = checkpoint
             lowest_loss = loss_val

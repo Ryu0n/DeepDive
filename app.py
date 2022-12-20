@@ -45,7 +45,7 @@ async def predict_document_sentiment(params: DocumentSentimentPredictParams):
     :param params:
     :return:
     """
-    model = ElectraForTokenClassification.from_pretrained('electra_token_cls.pt')
+    model = ElectraForTokenClassification.from_pretrained('electra_token_cls2.pt')
     tokenizer = ElectraTokenizerFast.from_pretrained('beomi/KcELECTRA-base-v2022')
     model.eval()
     tag_informs = list()

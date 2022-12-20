@@ -3,4 +3,5 @@ config.json
 .idea
 .DS_Store
 __pycache__
-electra_token_cls.pt
+electra_token_cls*
+secret_s3.json
