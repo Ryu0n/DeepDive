@@ -13,7 +13,6 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from itertools import chain
 from tqdm import tqdm
 from transformers import AdamW
-from collections import Counter
 from torch.utils.data import DataLoader, Dataset
 from sklearn.metrics import classification_report
 from src.utils import polarity_map, Arguments
@@ -95,48 +94,6 @@ def train_aspect_sentimental_classifier(epochs=5):
     Arguments.instance().model_path = model_path
 
 
-def merge_tokens(filtered_tokens: np.ndarray, filtered_result: np.ndarray):
-    filtered_tokens, filtered_result = list(filtered_tokens), list(filtered_result)
-    splited_tokens, splited_sentiments = [], []
-
-    # split subword tokens by word
-    # 서브워드 토큰들을 단어 단위로 나눔
-    while filtered_tokens:
-        curr_token: str = filtered_tokens.pop(0)
-        curr_sentiment: str = filtered_result.pop(0)
-        if not curr_token.startswith('##'):
-            # Start of subwords
-            splited_tokens.append([curr_token])
-            splited_sentiments.append([curr_sentiment])
-        elif splited_tokens:
-            # Intermediate of subwords
-            splited_tokens[-1].append(curr_token)
-            splited_sentiments[-1].append(curr_sentiment)
-
-    # post process for intermediate subword tokens
-    # 중간에서 감정이 존재하는 서브워드 토큰들을 제외
-    sanitized_tokens, sanitized_sentiments = [], []
-    for tokens, sentiments in zip(splited_tokens, splited_sentiments):
-        is_not_unrelated = True
-        for token, sentiment in zip(tokens, sentiments):
-            if sentiment == 'unrelated':
-                is_not_unrelated = False
-            if is_not_unrelated is False:
-                continue
-            if not token.startswith('##'):
-                sanitized_tokens.append(token)
-                sanitized_sentiments.append([sentiment])
-            else:
-                sanitized_tokens[-1] += token.replace('##', '')
-                sanitized_sentiments[-1].append(sentiment)
-
-    sanitized_sentiments = map(lambda sentiment: Counter(sentiment).most_common(n=1)[0][0], sanitized_sentiments)
-
-    for token, sentiment in zip(sanitized_tokens, sanitized_sentiments):
-        if sentiment != 'unrelated':
-            print(token, sentiment)
-
-
 def post_process(true_sentiments: np.ndarray, pred_sentiments: np.ndarray):
 
     filtered_true_sentiments = [sentiment[sentiment != -100] for sentiment in true_sentiments]
@@ -214,8 +171,6 @@ def evaluate_aspect_sentimental_classifier():
     tokenizer = Arguments.instance().tokenizer
     model = model_class.from_pretrained(model_path)
     model.eval()
-    # vocab = tokenizer.get_vocab()
-    # vocab = {v: k for k, v in vocab.items()}
     sentences = source['ko'][1]()
     pred_sentiments, true_sentiments = [], []
     for i, sentence in enumerate(sentences):
@@ -223,8 +178,6 @@ def evaluate_aspect_sentimental_classifier():
             sentence, sentiments = sentence
             true_sentiments.append(sentiments)
             inputs = tokenizer.encode_plus(sentence, return_tensors='pt', padding='max_length', truncation=True)
-            # input_ids = inputs.get('input_ids')
-            # tokens = np.array([vocab.get(int(input_id)) for input_id in input_ids[0]])
             outputs = model(**inputs)
             probs = torch.softmax(outputs.logits, dim=-1)
             result = np.array(torch.argmax(probs, dim=-1)[0])
@@ -233,21 +186,6 @@ def evaluate_aspect_sentimental_classifier():
 
             print('\n', sentence)
             show_merged_sentence(sentence, result)
-
-            # Display results in string
-            # filtered_tokens = tokens[
-            #     (tokens != '[CLS]')
-            #     & (tokens != '[UNK]')
-            #     & (tokens != '[SEP]')
-            #     & (tokens != '[PAD]')
-            #     ]
-            # filtered_result = result[
-            #     (tokens != '[CLS]')
-            #     & (tokens != '[UNK]')
-            #     & (tokens != '[SEP]')
-            #     & (tokens != '[PAD]')
-            #     ]
-            # merge_tokens(filtered_tokens, filtered_result)
 
     pred_sentiments = np.array(pred_sentiments)
     true_sentiments = np.array(true_sentiments)

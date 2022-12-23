@@ -20,7 +20,7 @@ def s3_resource(secret):
     return s3
 
 
-def upload_model_checkpoint(file_name: str, version: str = '1.0.0'):
+def upload_model_checkpoint(file_name: str):
     """
     모델 가중치 폴더 압축 후 S3 버킷에 업로드
     :param file_name: 모델 가중치 폴더 이름 (.pt)
@@ -28,7 +28,7 @@ def upload_model_checkpoint(file_name: str, version: str = '1.0.0'):
     :return:
     """
     def compress_model_checkpoint(file_name: str):
-        compressed_filename = f'{os.path.basename(file_name)}_{version}.tar.gz'
+        compressed_filename = f'{os.path.basename(file_name)}.tar.gz'
         subprocess.run([
             'tar', '-zcvf', compressed_filename, file_name
         ])
@@ -65,5 +65,5 @@ def download_model_checkpoint(model_checkpoint: str):
 
 
 if __name__ == "__main__":
-    # upload_model_checkpoint('electra_token_cls2.pt')
-    download_model_checkpoint('ABSA/electra_token_cls2.pt_1.0.0.tar.gz')
+    upload_model_checkpoint('electra_token_cls_epoch_4_loss_0.18488148148148145.pt')
+    # download_model_checkpoint('ABSA/electra_token_cls2.pt_1.0.0.tar.gz')

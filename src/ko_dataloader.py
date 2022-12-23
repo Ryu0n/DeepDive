@@ -58,7 +58,7 @@ def add_additional_data(tokenizer):
     vocab = tokenizer.get_vocab()
     vocab = {v: k for k, v in vocab.items()}  # id : word
     rows = []
-    file_name = 'ABSA_negative_and_neutral_token_all_10000.jsonl'
+    file_name = 'pang7.jsonl'
     with open(_get_json_file(file_name), 'r') as f:
         lines = f.readlines()
         for line in tqdm(lines):
@@ -97,8 +97,6 @@ def down_sampling(rows: list):
         total_sentiments = sum([sentiments.count(sent) for sent in [0, 1, 2, 3]])
         num_unrelated = sentiments.count(0)
         unrelated_ratio = num_unrelated / total_sentiments
-        if 1 not in sentiments and 3 not in sentiments:
-            continue
         if unrelated_ratio > 0.85:
             continue
         sampled_rows.append([sentence_text, sentiments])
@@ -111,15 +109,26 @@ def train_test_split(rows: list, train_ratio: float):
     return train_rows, test_rows
 
 
-def read_train_dataset(write=True, train_ratio=0.9):
+def read_train_dataset(write=True, train_ratio=0.9, num_test_samples=50):
     tokenizer = Arguments.instance().tokenizer
     file_name = 'sample'
-    rows = parse_json_dict(tokenizer, file_name+'.json')
+    train_rows = parse_json_dict(tokenizer, file_name + '.json')
     additional_rows = add_additional_data(tokenizer)
-    rows.extend(additional_rows)
-    rows = down_sampling(rows)
-    random.shuffle(rows)
-    train_rows, test_rows = train_test_split(rows, train_ratio)
+    test_rows = train_rows[:num_test_samples]
+    test_rows.extend(additional_rows[:num_test_samples])
+    train_rows = train_rows[num_test_samples:]
+    train_rows.extend(additional_rows[num_test_samples:])
+    train_rows = down_sampling(train_rows)
+    random.shuffle(train_rows)
+
+    # tokenizer = Arguments.instance().tokenizer
+    # file_name = 'sample'
+    # rows = parse_json_dict(tokenizer, file_name+'.json')
+    # additional_rows = add_additional_data(tokenizer)
+    # rows.extend(additional_rows)
+    # rows = down_sampling(rows)
+    # random.shuffle(rows)
+    # train_rows, test_rows = train_test_split(rows, train_ratio)
 
     # save test text
     if write:

@@ -13,6 +13,9 @@ polarity_map = {
     2: 'neutral',
     3: 'positive',
 }
+model = ElectraForTokenClassification.from_pretrained('electra_token_cls_epoch_4_loss_0.18488148148148145.pt')
+tokenizer = ElectraTokenizerFast.from_pretrained('beomi/KcELECTRA-base-v2022')
+model.eval()
 
 
 @app.post('/predict_token_sentiment')
@@ -22,9 +25,6 @@ async def predict_token_sentiment(params: TokenSentimentPredictParams):
     :param params:
     :return:
     """
-    model = ElectraForTokenClassification.from_pretrained('electra_token_cls.pt')
-    tokenizer = ElectraTokenizerFast.from_pretrained('beomi/KcELECTRA-base-v2022')
-    model.eval()
     tag_informs = list()
     for i, sentence in enumerate(params.sentences):
         with torch.no_grad():
@@ -45,9 +45,6 @@ async def predict_document_sentiment(params: DocumentSentimentPredictParams):
     :param params:
     :return:
     """
-    model = ElectraForTokenClassification.from_pretrained('electra_token_cls2.pt')
-    tokenizer = ElectraTokenizerFast.from_pretrained('beomi/KcELECTRA-base-v2022')
-    model.eval()
     tag_informs = list()
     for i, sentence in enumerate(params.sentences):
         with torch.no_grad():
@@ -64,6 +61,7 @@ async def predict_document_sentiment(params: DocumentSentimentPredictParams):
         sentiment_results.append(
             {
                 "sentence": tag_info.get('origin_sentence'),
+                "merged_sentence": tag_info.get('merged_sentence'),
                 "document_sentiment": sentiment
             }
         )

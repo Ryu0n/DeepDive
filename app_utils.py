@@ -74,11 +74,14 @@ async def calculate_sentimental_score(target_keyword: str, tag_informs: list):
 
         counter = Counter(sentiments)
         counter = dict(counter)
-        if counter.get('negative') == counter.get('positive'):
-            document_sentiments.append('neutral')
-        else:
-            counter: Counter = Counter(counter)
-            sentiment = counter.most_common(1)[0][0]
-            document_sentiments.append(sentiment)
+        sentimental_score = (counter.setdefault('negative', 0) * -1.0) + (counter.setdefault('positive', 0) * 1.0)
+        document_sentiment = 'neutral'
+        if sentimental_score > 0:
+            document_sentiment = 'positive'
+        elif sentimental_score == 0:
+            document_sentiment = 'neutral'
+        elif sentimental_score < 0:
+            document_sentiment = 'negative'
+        document_sentiments.append(document_sentiment)
 
     return document_sentiments
