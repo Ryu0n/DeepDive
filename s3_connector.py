@@ -34,7 +34,9 @@ def upload_model_checkpoint(file_name: str):
         ])
         return compressed_filename
 
-    compressed_filename = compress_model_checkpoint(file_name)
+    compressed_filename = file_name
+    if not file_name.endswith('tar.gz'):
+        compressed_filename = compress_model_checkpoint(file_name)
     secret = secret_information()
     s3 = s3_resource(secret=secret)
     bucket = s3.Bucket(secret.get("bucket_name"))
@@ -65,5 +67,5 @@ def download_model_checkpoint(model_checkpoint: str):
 
 
 if __name__ == "__main__":
-    upload_model_checkpoint('electra_token_cls_epoch_4_loss_0.18488148148148145.pt')
+    upload_model_checkpoint('electra_token_cls_epoch_4_loss_0.1989020979020979.pt.tar.gz')
     # download_model_checkpoint('ABSA/electra_token_cls2.pt_1.0.0.tar.gz')
