@@ -7,8 +7,8 @@ from transformers import AdamW
 from torch.cuda import is_available
 from tqdm import tqdm
 from sklearn.metrics import classification_report
-# from utils import get_labels_dict  # 국립국어원 라벨
 from preprocess_for_selecstar import get_labels_dict
+# from preprocess_for_kooklib import get_labels_dict  # 국립국어원 라벨
 
 
 labels_dict = get_labels_dict()
@@ -59,7 +59,7 @@ def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
             total_loss += loss_val
             train_loop.set_postfix(loss=loss_val)
         avg_loss = round(total_loss / len(train_dataloader), 3)
-        checkpoint = f'{model.__class__.__name__}_epoch_{epoch}_avg_loss_{avg_loss}.pt'
+        checkpoint = f'ner_{model.__class__.__name__}_epoch_{epoch}_avg_loss_{avg_loss}.pt'
         model.save_pretrained(checkpoint)
 
     # Evaluation

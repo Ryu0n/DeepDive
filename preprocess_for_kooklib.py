@@ -1,3 +1,7 @@
+"""
+국립국어원 전처리 로직
+"""
+
 import json
 from tqdm import tqdm
 from torch.nn import CrossEntropyLoss
@@ -10,7 +14,7 @@ model_checkpoint = 'klue/bert-base'
 
 def get_labels_dict():
     labels_dict = dict()
-    with open('labels.txt', 'r') as f:
+    with open('labels_kooklib.txt', 'r') as f:
         labels = list(map(lambda label: label.replace('\n', ''), f.readlines()))
         for i, label in enumerate(labels):
             labels_dict[label] = i

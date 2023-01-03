@@ -1,4 +1,3 @@
-import re
 import json
 from tqdm import tqdm
 from glob import glob

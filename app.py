@@ -1,6 +1,6 @@
 import torch
 from transformers import BertForTokenClassification, BertTokenizerFast
-from utils import get_labels_dict
+from preprocess_for_kooklib import get_labels_dict
 from typing import List
 
 
