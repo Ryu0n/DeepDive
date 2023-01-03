@@ -75,6 +75,7 @@ def train_aspect_sentimental_classifier(epochs=5):
             outputs = model(**batch)
             loss = outputs.loss
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), 6)
             optim.step()
             loss_val = round(loss.item(), 3)
             total_loss += loss_val
@@ -86,7 +87,7 @@ def train_aspect_sentimental_classifier(epochs=5):
         elif 'electra' in tokenizer_name.lower():
             m = 'electra'
         avg_train_loss = total_loss / len(dataloader)
-        checkpoint = f'{m}_token_cls_epoch_{epoch}_loss_{round(avg_train_loss, 3)}.pt'
+        checkpoint = f'absa_{m}_token_cls_epoch_{epoch}_loss_{round(avg_train_loss, 3)}.pt'
         if avg_train_loss < lowest_loss:
             model_path = checkpoint
             lowest_loss = loss_val
@@ -138,6 +139,8 @@ def show_merged_sentence(sentence: str, result: np.ndarray):
             merged_token += f'{gap}{token}'
             span_indices.extend(offset)
             end_index = end
+        if len(span_indices) == 0:
+            continue
         span_indices = [min(span_indices), max(span_indices)]
         merged_token_dict = {
             'merged_token': merged_token.strip().replace('##', ''),

@@ -58,7 +58,7 @@ def add_additional_data(tokenizer):
     vocab = tokenizer.get_vocab()
     vocab = {v: k for k, v in vocab.items()}  # id : word
     rows = []
-    file_name = 'pang8.jsonl'
+    file_name = 'pang10.jsonl'
     with open(_get_json_file(file_name), 'r') as f:
         lines = f.readlines()
         for line in tqdm(lines):
@@ -90,45 +90,39 @@ def add_additional_data(tokenizer):
         return rows
 
 
-def down_sampling(rows: list):
+def down_sampling(rows: list, is_additional: bool = False):
     sampled_rows = []
-    rows = [[sentence_text, sentiments] for sentence_text, sentiments in rows if 1 in sentiments or 2 in sentiments or 3 in sentiments]
+    rows = [[sentence_text, sentiments] for sentence_text, sentiments in rows if
+            1 in sentiments or 2 in sentiments or 3 in sentiments]
     for sentence_text, sentiments in rows:
         total_sentiments = sum([sentiments.count(sent) for sent in [0, 1, 2, 3]])
         num_unrelated = sentiments.count(0)
         unrelated_ratio = num_unrelated / total_sentiments
         if unrelated_ratio > 0.85:
             continue
+        sentiment_distribution = [sentiments.count(sent) for sent in [1, 2, 3]]
+        num_negative, num_neutral, num_positive = sentiment_distribution
+        num_sentiments = sum(sentiment_distribution)
+        positive_ratio = num_positive / num_sentiments
+        if positive_ratio > 0.5 and is_additional:
+            continue
         sampled_rows.append([sentence_text, sentiments])
     return sampled_rows
 
 
-def train_test_split(rows: list, train_ratio: float):
-    train_size = int(len(rows) * train_ratio)
-    train_rows, test_rows = rows[:train_size], rows[train_size:]
-    return train_rows, test_rows
-
-
-def read_train_dataset(write=True, train_ratio=0.9, num_test_samples=50):
+def read_train_dataset(write=True, num_test_samples=50):
     tokenizer = Arguments.instance().tokenizer
     file_name = 'sample'
-    train_rows = parse_json_dict(tokenizer, file_name + '.json')
-    additional_rows = add_additional_data(tokenizer)
-    test_rows = train_rows[:num_test_samples]
-    test_rows.extend(additional_rows[:num_test_samples])
-    train_rows = train_rows[num_test_samples:]
-    train_rows.extend(additional_rows[num_test_samples:])
+    original_rows = parse_json_dict(tokenizer, file_name + '.json')
+    train_rows, test_rows = original_rows[num_test_samples:], original_rows[:num_test_samples]
     train_rows = down_sampling(train_rows)
-    random.shuffle(train_rows)
 
-    # tokenizer = Arguments.instance().tokenizer
-    # file_name = 'sample'
-    # rows = parse_json_dict(tokenizer, file_name+'.json')
-    # additional_rows = add_additional_data(tokenizer)
-    # rows.extend(additional_rows)
-    # rows = down_sampling(rows)
-    # random.shuffle(rows)
-    # train_rows, test_rows = train_test_split(rows, train_ratio)
+    additional_rows = add_additional_data(tokenizer)
+    additional_train_rows, additional_test_rows = additional_rows[num_test_samples:], additional_rows[:num_test_samples]
+    additional_train_rows = down_sampling(additional_train_rows, True)
+
+    train_rows.extend(additional_train_rows)
+    test_rows.extend(additional_test_rows)
 
     # save test text
     if write:
