@@ -1,6 +1,7 @@
 import torch
 from transformers import BertForTokenClassification, BertTokenizerFast
-from preprocess_for_kooklib import get_labels_dict
+from transformers import ElectraForTokenClassification, ElectraTokenizerFast
+from preprocess_for_selecstar import get_labels_dict
 from typing import List
 
 
@@ -45,8 +46,8 @@ def predict(model, tokenizer, sentence: str):
 
 
 if __name__ == "__main__":
-    model = BertForTokenClassification.from_pretrained("BertForTokenClassification_epoch_4_avg_loss_0.012.pt")
-    tokenizer = BertTokenizerFast.from_pretrained("klue/bert-base")
+    model = ElectraForTokenClassification.from_pretrained("BertForTokenClassification_epoch_4_avg_loss_0.012.pt")
+    tokenizer = ElectraTokenizerFast.from_pretrained("beomi/KcELECTRA-base-v2022")
 
     sentences = [
         "너랑 나랑 서울에서 햄버거 먹은 날 기억해?",

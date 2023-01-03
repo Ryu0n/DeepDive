@@ -37,13 +37,13 @@ def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
                 ]
             yield filtered_tensor
 
-    train_dataloader = dataloader(is_train=True, device=device)
-    eval_dataloader = dataloader(is_train=False, device=device)
-
     model_class, tokenizer_class = model_checkpoints.get(model_checkpoint)
     model = model_class.from_pretrained(model_checkpoint, num_labels=len(labels_dict))
+    tokenizer = tokenizer_class.from_pretrained(model_checkpoint)
     model.to(device)
     optim = AdamW(model.parameters(), lr=2e-5)
+    train_dataloader = dataloader(is_train=True, tokenizer=tokenizer, device=device)
+    eval_dataloader = dataloader(is_train=False, tokenizer=tokenizer, device=device)
 
     # Training
     for epoch in range(num_epochs):
@@ -68,17 +68,10 @@ def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
         eval_loop = tqdm(eval_dataloader, leave=True, desc=f'Evaluation')
         for batch in eval_loop:
             b_input_ids = batch.get("input_ids")
-
-            # (batch_size, sequence_length)
             labels = batch.get("labels")
-
-            # logits : (batch_size, sequence_length, config.num_labels)
-            # probs : (batch_size, sequence_length, config.num_labels)
-            # result : (batch_size, sequence_length)
             outputs = model(**batch)
             probs = torch.softmax(outputs.logits, dim=-1)
             preds = torch.argmax(probs, dim=-1)
-
             preds = filter_special_tokens(b_input_ids, preds)
             labels = filter_special_tokens(b_input_ids, labels)
 
@@ -101,4 +94,4 @@ def clear_gpu_memory():
 
 if __name__ == "__main__":
     clear_gpu_memory()
-    train_eval_ko_ner_model("klue/bert-base")
+    train_eval_ko_ner_model("beomi/KcELECTRA-base-v2022")
