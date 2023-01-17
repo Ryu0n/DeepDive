@@ -13,34 +13,6 @@ def execute_clone_repository():
     os.system('git clone https://github.com/songys/Chatbot_data')
 
 
-# def custom_train_test_split():
-#     df = pd.read_csv("Chatbot_data/ChatbotData.csv")
-
-#     df = df[["Q", "A"]].rename(
-#         columns={
-#             "Q": "source",
-#             "A": "target"
-#         }
-#     )
-
-#     df_train, df_test = train_test_split(
-#         df,
-#         test_size=0.1
-#     )
-#     df_train, df_valid = train_test_split(
-#         df,
-#         test_size=0.1
-#     )
-
-    
-#     if not os.path.exists(process_dir):
-#         os.mkdir(process_dir)
-    
-#     df_train.to_csv(process_dir + "train.tsv", sep="\t", index=None)
-#     df_valid.to_csv(process_dir + "valid.tsv", sep="\t", index=None)
-#     df_test.to_csv(process_dir + "test.tsv", sep="\t", index=None)
-
-
 def custom_train_test_split():
     df = pd.read_excel("comments.xlsx")
 
@@ -74,8 +46,9 @@ def batch_tokenize_preprocess_decoder(batch, tokenizer, max_length):
 
     # For GPT-2
     # input_sents = ['<|startoftext|>'+  s + '<|endoftext|><|startoftext|>' + t + '<|endoftext|>' for s,t in zip(source, target)]
-    input_sents = ['<s>'+  s + ' [A] ' + t + '</s>' for s, t in zip(source, target)]
-    # input_sents = [s + ' [질문] ' + t for s,t in zip(source, target)]
+    # input_sents = ['<s>'+  s + ' [A] ' + t + '</s>' for s, t in zip(source, target)]
+    input_sents = [tokenizer.bos_token +  s + tokenizer.eos_token+tokenizer.bos_token + t + tokenizer.eos_token for s, t in zip(source, target)]
+    
     tokenized = tokenizer(
         input_sents, 
         truncation=True, 
@@ -89,34 +62,6 @@ def batch_tokenize_preprocess_decoder(batch, tokenizer, max_length):
     batch["source"] = source
     batch["target"] = target
     return batch
-
-
-# def dataset(tokenizer, max_length=128):
-#     df_train = pd.read_csv(process_dir + "train.tsv", sep="\t")
-#     df_valid = pd.read_csv(process_dir + "valid.tsv", sep="\t")
-
-#     ds_train = Dataset.from_pandas(df_train)
-#     ds_valid = Dataset.from_pandas(df_valid)
-
-#     ds_train = ds_train.map(
-#         lambda batch: batch_tokenize_preprocess_decoder(
-#             batch=batch,
-#             tokenizer=tokenizer,
-#             max_length=max_length
-#         ),
-#         batched=True
-#     )
-
-#     ds_valid = ds_valid.map(
-#         lambda batch: batch_tokenize_preprocess_decoder(
-#             batch=batch,
-#             tokenizer=tokenizer,
-#             max_length=max_length
-#         ),
-#         batched=True
-#     )
-
-#     return ds_train, ds_valid
 
 
 def dataset(tokenizer, max_length=128):
@@ -149,14 +94,17 @@ def dataset(tokenizer, max_length=128):
 
 def get_dataset():
     # Github repository clone
-    if not os.path.exists("Chatbot_data"):
-        execute_clone_repository()
+    # if not os.path.exists("Chatbot_data"):
+        # execute_clone_repository()
     
     # split train & test
     custom_train_test_split()
 
     args = Args()
-    tokenizer = AutoTokenizer.from_pretrained(args.pretrained_model_checkpoint)
+    tokenizer = AutoTokenizer.from_pretrained(
+        args.pretrained_model_checkpoint,
+        bos_token='[BOS]', eos_token='[EOS]', unk_token='[UNK]', pad_token='[PAD]', mask_token='[MASK]'
+    )
     return dataset(
         tokenizer=tokenizer
     )

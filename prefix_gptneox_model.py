@@ -38,7 +38,10 @@ class PrefixGPTNeoXLMHeadModel(nn.Module):
         print("prefix-tuning sequence length is {}.".format(self.preseqlen))
 
         # Load tokenizer and model.
-        self.tokenizer = AutoTokenizer.from_pretrained(args.pretrained_model_checkpoint)
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            args.pretrained_model_checkpoint,
+            bos_token='[BOS]', eos_token='[EOS]', unk_token='[UNK]', pad_token='[PAD]', mask_token='[MASK]'
+        )
 
         self.pretrain_model = myGPTNeoXForCausalLM.from_pretrained(
             args.pretrained_model_checkpoint

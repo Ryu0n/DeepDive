@@ -28,21 +28,20 @@ def remove_tag(prompt: str):
 def generate_texts(model, prompt: str):
     model.eval()
     model.to('cuda')
-    start_tokens = f'<s>{prompt}'
-    model_in = start_tokens + ' [A] '
+    start_tokens = f'{model.tokenizer.bos_token}{prompt}'
+    model_in = start_tokens + f'{model.tokenizer.eos_token}{model.tokenizer.bos_token}'
     inputs = model.tokenizer([model_in], max_length=256, return_tensors="pt", add_special_tokens=True)
     inputs.to('cuda')
-    # print(inputs["input_ids"])
     generated_ids = model.generate(inputs["input_ids"], \
             attention_mask = inputs["attention_mask"], \
             num_beams=1, min_length=32, do_sample = False, \
-            max_length=63, repetition_penalty = 1.2, no_repeat_ngram_size = 3, early_stopping = True)
+            max_length=128, repetition_penalty = 1.2, no_repeat_ngram_size = 3, early_stopping = True)
 
     result = model.tokenizer.batch_decode(generated_ids, skip_special_tokens=False, clean_up_tokenization_spaces=True)[0]
     results = result.split(' [A] ')
-    print('Q : ', results[0])
+    print('Q : ', prompt)
     for result in results[1:]:
-        print('A : ', remove_tag(result))
+        print('A : ', remove_tag(result).replace('[EOS]\n', ' '))
     print()
 
 
@@ -121,5 +120,4 @@ if __name__ == "__main__":
     model = load_trained_model()
     for prompt in prompts:
         prompt = remove_emoji(prompt)
-        # prompt = '댓글에 적절한 응답하기\n' + prompt
         generate_texts(model, prompt)
