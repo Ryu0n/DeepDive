@@ -7,7 +7,7 @@ from transformers import ElectraTokenizerFast, ElectraForTokenClassification
 
 def get_labels_dict():
     labels_dict = dict()
-    with open('labels.txt', 'r') as f:
+    with open('labels_selectstar.txt', 'r') as f:
         labels = list(map(lambda label: label.replace('\n', ''), f.readlines()))
         for i, label in enumerate(labels):
             labels_dict[label] = i
