@@ -1,7 +1,7 @@
 import json
 from tqdm import tqdm
 from glob import glob
-from transformers import BertTokenizerFast
+from transformers import BertTokenizerFast, ElectraTokenizerFast
 
 
 def get_labels_dict():
@@ -10,22 +10,6 @@ def get_labels_dict():
         for i, label in enumerate(f.readlines()):
             labels_dict[label.replace('\n', '')] = i
     return labels_dict
-
-
-def main(prefix: str = '셀렉트스타_1차_결과_1107_2cycle_18580', train_ratio=0.7):
-    joined_lines = list()
-    labels_dict = get_labels_dict()
-    tokenizer = BertTokenizerFast.from_pretrained('klue/bert-base')
-    for file_path in tqdm(glob(f'{prefix}/*'), leave=True):
-        with open(file_path, 'r') as f:
-            json_dict = json.loads(''.join(f.readlines()))
-            joined_line = preprocess(tokenizer, json_dict, labels_dict)
-            joined_lines.append(joined_line)
-    num_train_samples = int(len(joined_lines) * train_ratio)
-    with open('select_star_preprocess_train.txt', 'w') as f:
-        f.write('\n'.join(joined_lines[:num_train_samples]))
-    with open('select_star_preprocess_test.txt', 'w') as f:
-        f.write('\n'.join(joined_lines[num_train_samples:]))
 
 
 def preprocess(tokenizer: BertTokenizerFast, json_dict: dict, labels_dict: dict):
@@ -61,6 +45,23 @@ def preprocess(tokenizer: BertTokenizerFast, json_dict: dict, labels_dict: dict)
         labels.append(str(label))
     joined_line = f'{sentence}\t{" ".join(labels)}'
     return joined_line
+
+
+def main(prefix: str = '셀렉트스타_1차_결과_1107_2cycle_18580', train_ratio=0.7):
+    joined_lines = list()
+    labels_dict = get_labels_dict()
+    # tokenizer = BertTokenizerFast.from_pretrained('klue/bert-base')
+    tokenizer = ElectraTokenizerFast.from_pretrained("beomi/KcELECTRA-base-v2022")
+    for file_path in tqdm(glob(f'{prefix}/*'), leave=True):
+        with open(file_path, 'r') as f:
+            json_dict = json.loads(''.join(f.readlines()))
+            joined_line = preprocess(tokenizer, json_dict, labels_dict)
+            joined_lines.append(joined_line)
+    num_train_samples = int(len(joined_lines) * train_ratio)
+    with open('select_star_preprocess_train.txt', 'w') as f:
+        f.write('\n'.join(joined_lines[:num_train_samples]))
+    with open('select_star_preprocess_test.txt', 'w') as f:
+        f.write('\n'.join(joined_lines[num_train_samples:]))
 
 
 if __name__ == "__main__":

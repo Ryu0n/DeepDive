@@ -8,7 +8,6 @@ from torch.cuda import is_available
 from tqdm import tqdm
 from sklearn.metrics import classification_report
 from preprocess_for_selecstar import get_labels_dict
-# from preprocess_for_kooklib import get_labels_dict  # 국립국어원 라벨
 
 
 labels_dict = get_labels_dict()

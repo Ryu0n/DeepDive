@@ -2,11 +2,6 @@ import torch
 from tqdm import tqdm
 from torch.utils.data import Dataset, DataLoader
 
-# 국립국어원 데이터셋
-# dataset_file_names = {
-#     True: "data/NXNE1902008030.json_preprocess.txt",
-#     False: "data/SXNE1902007240.json_preprocess.txt"
-# }
 
 dataset_file_names = {
     True: "select_star_preprocess_train.txt",
