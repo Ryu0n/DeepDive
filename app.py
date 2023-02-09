@@ -13,7 +13,7 @@ polarity_map = {
     2: 'neutral',
     3: 'positive',
 }
-model = ElectraForTokenClassification.from_pretrained('electra_token_cls_epoch_4_loss_0.18488148148148145.pt')
+model = ElectraForTokenClassification.from_pretrained('electra_token_cls_epoch_4_loss_0.23.pt')
 tokenizer = ElectraTokenizerFast.from_pretrained('beomi/KcELECTRA-base-v2022')
 model.eval()
 

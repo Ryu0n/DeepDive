@@ -186,7 +186,6 @@ def evaluate_aspect_sentimental_classifier():
             result = np.array(torch.argmax(probs, dim=-1)[0])
             pred_sentiments.append(result)
             result = np.array(list(map(lambda elem: polarity_map_reverse.get(elem), result)))
-
             print('\n', sentence)
             show_merged_sentence(sentence, result)
 
