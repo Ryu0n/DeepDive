@@ -26,32 +26,6 @@ tokenizer = ElectraTokenizerFast.from_pretrained("beomi/KcELECTRA-base-v2022")
 model.to(device)
 
 
-async def merge_tokens(tokenizer, tokens: List[str], labels: List[str]):
-    result = list()
-    for token, label in zip(tokens, labels):
-        if token in tokenizer.special_tokens_map.values():
-            continue
-        if not token.startswith("##"):
-            result.append([(token, label)])
-            continue
-        result[-1].append((token, label))
-    entities = list()
-    for sub_tokens in result:
-        first_sub_token = sub_tokens[0]
-        if first_sub_token[1] == 0:
-            continue
-        filtered_sub_tokens = list()
-        for sub_token in sub_tokens:
-            token, label = sub_token
-            if label == 0:
-                break
-            filtered_sub_tokens.append((token, labels_dict_inv.get(label)))
-        token = ''.join([token.replace('##', '') for token, label in filtered_sub_tokens])
-        label = filtered_sub_tokens[0][1]
-        entities.append((token, label))
-    return entities
-
-
 async def show_merged_sentence(tokenizer: ElectraTokenizerFast, sentence: str, result: np.ndarray):
     inputs = tokenizer.encode_plus(sentence,
                                    return_tensors='pt',
@@ -84,6 +58,8 @@ async def show_merged_sentence(tokenizer: ElectraTokenizerFast, sentence: str, r
             merged_token += f'{gap}{token}'
             span_indices.extend(offset)
             end_index = end
+        if len(span_indices) == 0:
+            continue
         span_indices = [min(span_indices), max(span_indices)]
         merged_token_dict = {
             'merged_token': merged_token.strip().replace('##', ''),
@@ -117,23 +93,22 @@ async def predict(model, tokenizer, sentence: str):
         truncation=True,
         return_tensors="pt"
     )
-    tokens = inputs.tokens()
     inputs.to(device)
     outputs = model(**inputs)
     logits = outputs.logits
     result = torch.argmax(logits, dim=-1)
     logits = logits.detach().cpu()
     result = result.detach().cpu().tolist()[0]
-    return result, tokens, result
+    return result, result
 
 @app.post('/predict')
 async def predict_named_entities(params: NERParams):
     response = list()
     sentences = params.sentences
     for sentence in sentences:
-        result, tokens, result = await predict(model, tokenizer, sentence)
-        entities = await merge_tokens(tokenizer=tokenizer, tokens=tokens, labels=result)
+        result, result = await predict(model, tokenizer, sentence)
         tag_info = await show_merged_sentence(tokenizer=tokenizer, sentence=sentence, result=result)
+        entities = [[span.get('merged_token'), span.get('sentiment')] for span in tag_info.get('spans') if span.get('sentiment') != 'O']
         response.append(
             {
                 "sentence": sentence,
