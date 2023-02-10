@@ -4,6 +4,8 @@ from typing import List
 from fastapi import FastAPI
 from dto import NERParams
 from transformers import ElectraTokenizerFast, ElectraForTokenClassification
+# from torch.cuda import is_available
+from torch.backends.mps import is_available
 
 
 def get_labels_dict():
@@ -16,13 +18,15 @@ def get_labels_dict():
 
 
 app = FastAPI()
+device = 'mps' if is_available() else 'cpu'
 labels_dict = get_labels_dict()
 labels_dict_inv = {v: k for k, v in labels_dict.items()}
 model = ElectraForTokenClassification.from_pretrained("model/ner_ElectraForTokenClassification_epoch_4_avg_loss_0.039.pt")
 tokenizer = ElectraTokenizerFast.from_pretrained("beomi/KcELECTRA-base-v2022")
+model.to(device)
 
 
-def merge_tokens(tokenizer, tokens: List[str], labels: List[str]):
+async def merge_tokens(tokenizer, tokens: List[str], labels: List[str]):
     result = list()
     for token, label in zip(tokens, labels):
         if token in tokenizer.special_tokens_map.values():
@@ -48,7 +52,7 @@ def merge_tokens(tokenizer, tokens: List[str], labels: List[str]):
     return entities
 
 
-def show_merged_sentence(tokenizer: ElectraTokenizerFast, sentence: str, result: np.ndarray):
+async def show_merged_sentence(tokenizer: ElectraTokenizerFast, sentence: str, result: np.ndarray):
     inputs = tokenizer.encode_plus(sentence,
                                    return_tensors='pt',
                                    padding='max_length',
@@ -106,7 +110,7 @@ def show_merged_sentence(tokenizer: ElectraTokenizerFast, sentence: str, result:
     return tag_info
 
 
-def predict(model, tokenizer, sentence: str):
+async def predict(model, tokenizer, sentence: str):
     inputs = tokenizer.encode_plus(
         sentence,
         padding='max_length',
@@ -114,20 +118,22 @@ def predict(model, tokenizer, sentence: str):
         return_tensors="pt"
     )
     tokens = inputs.tokens()
+    inputs.to(device)
     outputs = model(**inputs)
     logits = outputs.logits
-    result = torch.argmax(logits, dim=-1).tolist()[0]
+    result = torch.argmax(logits, dim=-1)
+    logits = logits.detach().cpu()
+    result = result.detach().cpu().tolist()[0]
     return result, tokens, result
 
-
 @app.post('/predict')
-def predict_named_entities(params: NERParams):
+async def predict_named_entities(params: NERParams):
     response = list()
     sentences = params.sentences
     for sentence in sentences:
-        result, tokens, result = predict(model, tokenizer, sentence)
-        entities = merge_tokens(tokenizer=tokenizer, tokens=tokens, labels=result)
-        tag_info = show_merged_sentence(tokenizer=tokenizer, sentence=sentence, result=result)
+        result, tokens, result = await predict(model, tokenizer, sentence)
+        entities = await merge_tokens(tokenizer=tokenizer, tokens=tokens, labels=result)
+        tag_info = await show_merged_sentence(tokenizer=tokenizer, sentence=sentence, result=result)
         response.append(
             {
                 "sentence": sentence,
