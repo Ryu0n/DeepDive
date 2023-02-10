@@ -108,12 +108,14 @@ async def predict_named_entities(params: NERParams):
     for sentence in sentences:
         result, result = await predict(model, tokenizer, sentence)
         tag_info = await show_merged_sentence(tokenizer=tokenizer, sentence=sentence, result=result)
-        entities = [[span.get('merged_token'), span.get('sentiment')] for span in tag_info.get('spans') if span.get('sentiment') != 'O']
+        entities = [[span.get('merged_token'), span.get('sentiment'), span.get('span_indices')] for span in tag_info.get('spans') if span.get('sentiment') != 'O']
+        not_entities = [[span.get('merged_token'), span.get('sentiment'), span.get('span_indices')] for span in tag_info.get('spans') if span.get('sentiment') == 'O']
         response.append(
             {
                 "sentence": sentence,
                 "merged_sentence": tag_info.get('merged_sentence'),
-                "entities": entities
+                "entities": entities,
+                "not_entities": not_entities
             }
         )
     return response
