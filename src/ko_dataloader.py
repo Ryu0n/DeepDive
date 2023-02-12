@@ -58,7 +58,7 @@ def add_additional_data(tokenizer):
     vocab = tokenizer.get_vocab()
     vocab = {v: k for k, v in vocab.items()}  # id : word
     rows = []
-    file_name = 'pang10.jsonl'
+    file_name = 'pang11.jsonl'
     with open(_get_json_file(file_name), 'r') as f:
         lines = f.readlines()
         for line in tqdm(lines):
