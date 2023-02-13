@@ -79,7 +79,8 @@ def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
                 y_pred.extend(pred.detach().cpu().numpy())
 
     report = classification_report(y_true=np.array(y_true),
-                                   y_pred=np.array(y_pred))
+                                   y_pred=np.array(y_pred),
+                                   target_names=list(labels_dict.keys()))
 
     with open('report.txt', 'w') as f:
         print(report)
