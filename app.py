@@ -21,7 +21,7 @@ app = FastAPI()
 device = 'mps' if is_available() else 'cpu'
 labels_dict = get_labels_dict()
 labels_dict_inv = {v: k for k, v in labels_dict.items()}
-model = ElectraForTokenClassification.from_pretrained("model/ner_ElectraForTokenClassification_epoch_4_avg_loss_0.039.pt")
+model = ElectraForTokenClassification.from_pretrained("model/ner_ElectraForTokenClassification_epoch_4_avg_loss_0.061.pt")
 tokenizer = ElectraTokenizerFast.from_pretrained("beomi/KcELECTRA-base-v2022")
 model.to(device)
 
