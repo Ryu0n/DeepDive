@@ -4,6 +4,8 @@ from fastapi import FastAPI
 from app_utils import *
 from dto import TokenSentimentPredictParams, DocumentSentimentPredictParams
 from transformers import ElectraTokenizerFast, ElectraForTokenClassification
+# from torch.cuda import is_available
+from torch.backends.mps import is_available
 
 
 app = FastAPI()
@@ -13,9 +15,11 @@ polarity_map = {
     2: 'neutral',
     3: 'positive',
 }
-model = ElectraForTokenClassification.from_pretrained('electra_token_cls_epoch_4_loss_0.23.pt')
+device = 'mps' if is_available() else 'cpu'
+model = ElectraForTokenClassification.from_pretrained('absa_electra_token_cls_epoch_4_loss_0.239.pt')
 tokenizer = ElectraTokenizerFast.from_pretrained('beomi/KcELECTRA-base-v2022')
 model.eval()
+model.to(device)
 
 
 @app.post('/predict_token_sentiment')
@@ -29,8 +33,10 @@ async def predict_token_sentiment(params: TokenSentimentPredictParams):
     for i, sentence in enumerate(params.sentences):
         with torch.no_grad():
             inputs = tokenizer.encode_plus(sentence, return_tensors='pt', padding='max_length', truncation=True)
+            inputs.to(device)
             outputs = model(**inputs)
-            probs = torch.softmax(outputs.logits, dim=-1)
+            logits = outputs.logits.detach().cpu()
+            probs = torch.softmax(logits, dim=-1)
             result = np.array(torch.argmax(probs, dim=-1)[0])
             result = np.array(list(map(lambda elem: polarity_map.get(elem), result)))
             tag_informs.append(show_merged_sentence(tokenizer, sentence, result))
@@ -49,8 +55,10 @@ async def predict_document_sentiment(params: DocumentSentimentPredictParams):
     for i, sentence in enumerate(params.sentences):
         with torch.no_grad():
             inputs = tokenizer.encode_plus(sentence, return_tensors='pt', padding='max_length', truncation=True)
+            inputs.to(device)
             outputs = model(**inputs)
-            probs = torch.softmax(outputs.logits, dim=-1)
+            logits = outputs.logits.detach().cpu()
+            probs = torch.softmax(logits, dim=-1)
             result = np.array(torch.argmax(probs, dim=-1)[0])
             result = np.array(list(map(lambda elem: polarity_map.get(elem), result)))
             tag_informs.append(show_merged_sentence(tokenizer, sentence, result))

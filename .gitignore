@@ -4,4 +4,5 @@ config.json
 .DS_Store
 __pycache__
 electra_token_cls*
+absa_electra_token_cls*
 secret_s3.json

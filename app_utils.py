@@ -35,6 +35,8 @@ def show_merged_sentence(tokenizer: ElectraTokenizerFast, sentence: str, result:
             merged_token += f'{gap}{token}'
             span_indices.extend(offset)
             end_index = end
+        if len(span_indices) == 0:
+            continue
         span_indices = [min(span_indices), max(span_indices)]
         merged_token_dict = {
             'merged_token': merged_token.strip().replace('##', ''),
