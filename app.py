@@ -1,16 +1,17 @@
+import os
 import torch
 import numpy as np
 from typing import List
 from fastapi import FastAPI
 from dto import NERParams
 from transformers import ElectraTokenizerFast, ElectraForTokenClassification
-# from torch.cuda import is_available
-from torch.backends.mps import is_available
+from torch.cuda import is_available
+# from torch.backends.mps import is_available
 
 
 def get_labels_dict():
     labels_dict = dict()
-    with open('labels_selectstar.txt', 'r') as f:
+    with open('static/labels_selectstar.txt', 'r') as f:
         labels = list(map(lambda label: label.replace('\n', ''), f.readlines()))
         for i, label in enumerate(labels):
             labels_dict[label] = i
@@ -18,20 +19,21 @@ def get_labels_dict():
 
 
 app = FastAPI()
-device = 'mps' if is_available() else 'cpu'
+device = 'cuda' if is_available() else 'cpu'
 labels_dict = get_labels_dict()
 labels_dict_inv = {v: k for k, v in labels_dict.items()}
-model = ElectraForTokenClassification.from_pretrained("model/ner_ElectraForTokenClassification_epoch_4_avg_loss_0.061.pt")
-tokenizer = ElectraTokenizerFast.from_pretrained("beomi/KcELECTRA-base-v2022")
-model.to(device)
+model = ElectraForTokenClassification.from_pretrained(os.environ["BASE_MODEL_CHECKPOINT"]).to(device)
+tokenizer = ElectraTokenizerFast.from_pretrained(os.environ["MODEL_PATH"])
 
 
 async def show_merged_sentence(tokenizer: ElectraTokenizerFast, sentence: str, result: np.ndarray):
-    inputs = tokenizer.encode_plus(sentence,
-                                   return_tensors='pt',
-                                   padding='max_length',
-                                   truncation=True,
-                                   return_offsets_mapping=True)
+    inputs = tokenizer.encode_plus(
+        sentence,
+        return_tensors='pt',
+        padding='max_length',
+        truncation=True,
+        return_offsets_mapping=True
+    )
     tokens, offsets = inputs.tokens(), inputs.get('offset_mapping').tolist()[0]
     chunks, chunk, curr_sentiment = list(), list(), result[1]  # 0 is [CLS]
     for token, sentiment, offset in zip(tokens, result, offsets):

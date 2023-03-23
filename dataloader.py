@@ -4,8 +4,8 @@ from torch.utils.data import Dataset, DataLoader
 
 
 dataset_file_names = {
-    True: "select_star_preprocess_train.txt",
-    False: "select_star_preprocess_test.txt"
+    True: "static/select_star_preprocess_train.txt",
+    False: "static/select_star_preprocess_test.txt"
 }
 
 
@@ -45,6 +45,8 @@ class NerDataset(Dataset):
 
 def dataloader(is_train, device, tokenizer, batch_size=16):
     dataset = NerDataset(is_train=is_train, device=device, tokenizer=tokenizer)
-    return DataLoader(dataset=dataset,
-                      batch_size=batch_size,
-                      shuffle=True)
+    return DataLoader(
+            dataset=dataset,
+            batch_size=batch_size,
+            shuffle=True
+        )

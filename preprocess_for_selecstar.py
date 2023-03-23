@@ -6,7 +6,7 @@ from transformers import ElectraTokenizerFast
 
 def get_labels_dict():
     labels_dict = dict()
-    with open('labels_selectstar.txt', 'r') as f:
+    with open('static/labels_selectstar.txt', 'r') as f:
         for i, label in enumerate(f.readlines()):
             labels_dict[label.replace('\n', '')] = i
     return labels_dict
@@ -56,15 +56,15 @@ def main(prefix: str = 'final_json', train_ratio=0.7):
     joined_lines = list()
     labels_dict = get_labels_dict()
     tokenizer = ElectraTokenizerFast.from_pretrained("beomi/KcELECTRA-base-v2022")
-    for file_path in glob(f'{prefix}*'):
+    for file_path in glob(f'static/{prefix}*'):
         with open(file_path, 'r', encoding='utf-8-sig') as f:
             json_dict = json.loads(''.join(f.readlines()))
             for joined_line in preprocess(tokenizer, json_dict, labels_dict):
                 joined_lines.append(joined_line)
     num_train_samples = int(len(joined_lines) * train_ratio)
-    with open('select_star_preprocess_train.txt', 'w') as f:
+    with open('static/select_star_preprocess_train.txt', 'w') as f:
         f.write('\n'.join(joined_lines[:num_train_samples]))
-    with open('select_star_preprocess_test.txt', 'w') as f:
+    with open('static/select_star_preprocess_test.txt', 'w') as f:
         f.write('\n'.join(joined_lines[num_train_samples:]))
 
 

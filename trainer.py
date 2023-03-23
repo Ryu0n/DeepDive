@@ -1,3 +1,4 @@
+import os
 import gc
 import torch
 import numpy as np
@@ -43,6 +44,9 @@ def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
     optim = AdamW(model.parameters(), lr=2e-5)
     train_dataloader = dataloader(is_train=True, tokenizer=tokenizer, device=device)
     eval_dataloader = dataloader(is_train=False, tokenizer=tokenizer, device=device)
+    
+    if not os.path.exists('models'):
+        os.mkdir('models')
 
     # Training
     for epoch in range(num_epochs):
@@ -58,7 +62,7 @@ def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
             total_loss += loss_val
             train_loop.set_postfix(loss=loss_val)
         avg_loss = round(total_loss / len(train_dataloader), 3)
-        checkpoint = f'ner_{model.__class__.__name__}_epoch_{epoch}_avg_loss_{avg_loss}.pt'
+        checkpoint = f'models/ner_{model.__class__.__name__}_epoch_{epoch}_avg_loss_{avg_loss}.pt'
         model.save_pretrained(checkpoint)
 
     # Evaluation
@@ -78,9 +82,11 @@ def train_eval_ko_ner_model(model_checkpoint, num_epochs=5):
                 y_true.extend(label.detach().cpu().numpy())
                 y_pred.extend(pred.detach().cpu().numpy())
 
-    report = classification_report(y_true=np.array(y_true),
-                                   y_pred=np.array(y_pred),
-                                   target_names=list(labels_dict.keys()))
+    report = classification_report(
+        y_true=np.array(y_true),
+        y_pred=np.array(y_pred),
+        target_names=list(labels_dict.keys())
+    )
 
     with open('report.txt', 'w') as f:
         print(report)
