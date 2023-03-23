@@ -23,8 +23,8 @@ app = FastAPI()
 device = 'cuda' if is_available() else 'cpu'
 labels_dict = get_labels_dict()
 labels_dict_inv = {v: k for k, v in labels_dict.items()}
-model = ElectraForTokenClassification.from_pretrained(os.environ["BASE_MODEL_CHECKPOINT"]).to(device)
-tokenizer = ElectraTokenizerFast.from_pretrained(os.environ["MODEL_PATH"])
+model = ElectraForTokenClassification.from_pretrained(os.environ["MODEL_PATH"]).to(device)
+tokenizer = ElectraTokenizerFast.from_pretrained(os.environ["BASE_MODEL_CHECKPOINT"])
 
 
 async def show_merged_sentence(tokenizer: ElectraTokenizerFast, sentence: str, result: np.ndarray):
