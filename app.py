@@ -7,6 +7,7 @@ from dto import NERParams
 from transformers import ElectraTokenizerFast, ElectraForTokenClassification
 from torch.cuda import is_available
 # from torch.backends.mps import is_available
+from tqdm import tqdm
 
 
 def get_labels_dict():
@@ -107,7 +108,7 @@ async def predict(model, tokenizer, sentence: str):
 async def predict_named_entities(params: NERParams):
     response = list()
     sentences = params.sentences
-    for sentence in sentences:
+    for sentence in tqdm(sentences):
         result, result = await predict(model, tokenizer, sentence)
         tag_info = await show_merged_sentence(tokenizer=tokenizer, sentence=sentence, result=result)
         entities = [[span.get('merged_token'), span.get('sentiment'), span.get('span_indices')] for span in tag_info.get('spans') if span.get('sentiment') != 'O']
