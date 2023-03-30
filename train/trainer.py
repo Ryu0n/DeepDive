@@ -15,8 +15,8 @@ from tqdm import tqdm
 from transformers import AdamW
 from torch.utils.data import DataLoader, Dataset
 from sklearn.metrics import classification_report
-from src.utils import polarity_map, Arguments
-from src.ko_dataloader import read_train_dataset, read_test_dataset
+from train.utils import polarity_map, Arguments
+from train.ko_dataloader import read_train_dataset, read_test_dataset
 
 polarity_map_reverse = {v: k for k, v in polarity_map.items()}
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -65,6 +65,8 @@ def train_aspect_sentimental_classifier(epochs=5):
     model.to(device)
     model.train()
     lowest_loss, model_path = 99.0, None
+    if not os.path.exists("/models"):
+        os.mkdir('/models')
 
     for epoch in range(epochs):
         loop = tqdm(dataloader, leave=True)
@@ -87,7 +89,7 @@ def train_aspect_sentimental_classifier(epochs=5):
         elif 'electra' in tokenizer_name.lower():
             m = 'electra'
         avg_train_loss = total_loss / len(dataloader)
-        checkpoint = f'absa_{m}_token_cls_epoch_{epoch}_loss_{round(avg_train_loss, 3)}.pt'
+        checkpoint = f'models/absa_{m}_token_cls_epoch_{epoch}_loss_{round(avg_train_loss, 3)}.pt'
         if avg_train_loss < lowest_loss:
             model_path = checkpoint
             lowest_loss = loss_val

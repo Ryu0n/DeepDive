@@ -2,7 +2,7 @@ from transformers import BertTokenizerFast, BertForTokenClassification
 from transformers import ElectraTokenizerFast, ElectraForTokenClassification
 from transformers import ElectraTokenizerFast, AutoModelForTokenClassification
 
-from src.patterns import SingletonInstance
+from train.patterns import SingletonInstance
 
 polarity_map = {
     'unrelated': 0,

@@ -3,8 +3,8 @@ import json
 import random
 import torch.nn as nn
 from tqdm import tqdm
-from src.utils import Arguments
-from src.utils import polarity_map
+from train.utils import Arguments
+from train.utils import polarity_map
 
 
 def _get_json_file(file_name: str):
@@ -58,7 +58,7 @@ def add_additional_data(tokenizer):
     vocab = tokenizer.get_vocab()
     vocab = {v: k for k, v in vocab.items()}  # id : word
     rows = []
-    file_name = 'pang11.jsonl'
+    file_name = 'pang12.jsonl'
     with open(_get_json_file(file_name), 'r') as f:
         lines = f.readlines()
         for line in tqdm(lines):
@@ -110,7 +110,7 @@ def down_sampling(rows: list, is_additional: bool = False):
     return sampled_rows
 
 
-def read_train_dataset(write=True, num_test_samples=50):
+def read_train_dataset(write=True, num_test_samples=150):
     tokenizer = Arguments.instance().tokenizer
     file_name = 'sample'
     original_rows = parse_json_dict(tokenizer, file_name + '.json')

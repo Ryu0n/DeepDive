@@ -15,8 +15,9 @@ polarity_map = {
     2: 'neutral',
     3: 'positive',
 }
+# device = 'cuda' if is_available() else 'cpu'
 device = 'mps' if is_available() else 'cpu'
-model = ElectraForTokenClassification.from_pretrained('absa_electra_token_cls_epoch_4_loss_0.239.pt')
+model = ElectraForTokenClassification.from_pretrained('models/absa_electra_token_cls_epoch_4_loss_0.239.pt')
 tokenizer = ElectraTokenizerFast.from_pretrained('beomi/KcELECTRA-base-v2022')
 model.eval()
 model.to(device)
