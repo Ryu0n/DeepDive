@@ -65,8 +65,8 @@ def train_aspect_sentimental_classifier(epochs=5):
     model.to(device)
     model.train()
     lowest_loss, model_path = 99.0, None
-    if not os.path.exists("/models"):
-        os.mkdir('/models')
+    if not os.path.exists("./models"):
+        os.mkdir('./models')
 
     for epoch in range(epochs):
         loop = tqdm(dataloader, leave=True)
