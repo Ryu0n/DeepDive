@@ -1,0 +1,12 @@
+setfit
+datasets
+pandas
+matplotlib
+ipykernel
+torch
+sentence-transformers
+openpyxl
+seaborn
+soynlp==0.0.493
+html-text==0.5.2
+kiwipiepy==0.12.0
