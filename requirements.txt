@@ -1,0 +1,7 @@
+openai
+fastapi
+uvicorn[standard]
+redis
+numpy
+transformers
+backoff
