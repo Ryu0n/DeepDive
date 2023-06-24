@@ -1,0 +1,12 @@
+{
+    "encoder": {
+        "num_blocks": 6,
+        "d_model": 512,
+        "num_heads": 8
+    },
+    "decoder": {
+        "num_blocks": 6,
+        "d_model": 512,
+        "num_heads": 8
+    }
+}
