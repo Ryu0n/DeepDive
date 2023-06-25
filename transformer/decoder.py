@@ -11,24 +11,24 @@ class DecoderBlock(nn.Module):
         num_heads: int,
         d_ff: int
     ):
-        super(DecoderBlock).__init__()
+        super(DecoderBlock, self).__init__()
         self.masked_self_attention = MultiHeadAttention(
             d_model=d_model,
             num_heads=num_heads
         )
-        self.layer_norm1 = nn.LayerNorm()
+        self.layer_norm1 = nn.LayerNorm(d_model)
         
         self.cross_attention = MultiHeadAttention(
             d_model=d_model,
             num_heads=num_heads
         )
-        self.layer_norm2 = nn.LayerNorm()
+        self.layer_norm2 = nn.LayerNorm(d_model)
         
         self.feed_forward = FeedForwardNetwork(
             d_model=d_model,
             d_ff=d_ff
         )
-        self.layer_norm3 = nn.LayerNorm()
+        self.layer_norm3 = nn.LayerNorm(d_model)
         
     
     def forward(self, x, enc_out=None, self_mask=None, cross_mask=None):
@@ -64,7 +64,7 @@ class DecoderBlock(nn.Module):
 
 class Decoder(nn.Module):
     def __init__(self, config) -> None:
-        super(Decoder).__init__()
+        super(Decoder, self).__init__()
         
         self.vocab_size = config.get("vocab_size")
         self.max_length = config.get("max_length")
@@ -81,14 +81,16 @@ class Decoder(nn.Module):
             max_length=self.max_length,
             d_model=self.d_model
         )
-        self.decoder_blocks = [
-            DecoderBlock(
-                d_model=self.d_model,
-                num_heads=self.num_heads,
-                d_ff=self.d_ff
-            )
-            for _ in range(self.num_blocks)
-        ]
+        self.decoder_blocks = nn.ModuleList(
+            [
+                DecoderBlock(
+                    d_model=self.d_model,
+                    num_heads=self.num_heads,
+                    d_ff=self.d_ff
+                )
+                for _ in range(self.num_blocks)
+            ]
+        )
         self.linear = nn.Linear(
             in_features=self.d_model,
             out_features=self.vocab_size

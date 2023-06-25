@@ -11,17 +11,17 @@ class EncoderBlock(nn.Module):
         num_heads: int,
         d_ff: int
     ):
-        super(EncoderBlock).__init__()
+        super(EncoderBlock, self).__init__()
         self.self_attention = MultiHeadAttention(
             d_model=d_model,
             num_heads=num_heads
         )
-        self.layer_norm1 = nn.LayerNorm()
+        self.layer_norm1 = nn.LayerNorm(d_model)
         self.feed_forward = FeedForwardNetwork(
             d_model=d_model,
             d_ff=d_ff
         )
-        self.layer_norm2 = nn.LayerNorm()
+        self.layer_norm2 = nn.LayerNorm(d_model)
     
     
     def forward(self, x, mask=None):
@@ -46,7 +46,7 @@ class EncoderBlock(nn.Module):
 
 class Encoder(nn.Module):
     def __init__(self, config: dict) -> None:
-        super(Encoder).__init__()
+        super(Encoder, self).__init__()
         
         self.vocab_size = config.get("vocab_size")
         self.max_length = config.get("max_length")
@@ -64,14 +64,16 @@ class Encoder(nn.Module):
             d_model=self.d_model
         )
         
-        self.encoder_blocks = [
-            EncoderBlock(
-                d_model=self.d_model,
-                num_heads=self.num_heads,
-                d_ff=self.d_ff
-            ) 
-            for _ in range(self.num_blocks)
-        ]
+        self.encoder_blocks = nn.ModuleList(
+            [
+                EncoderBlock(
+                    d_model=self.d_model,
+                    num_heads=self.num_heads,
+                    d_ff=self.d_ff
+                ) 
+                for _ in range(self.num_blocks)
+            ]
+        )
     
     
     def forward(self, x, src_mask=None):

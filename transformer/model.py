@@ -7,7 +7,7 @@ from mask import init_mask
 
 class Transformer(nn.Module):
     def __init__(self):
-        super(Transformer).__init__()
+        super(Transformer, self).__init__()
         with open("config.json", "r") as f:
             config = json.load(f)
             config_encoder: dict = config.get("encoder")

@@ -1,3 +1,4 @@
+import math
 import torch
 import torch.nn as nn
 from einops import rearrange
@@ -9,7 +10,7 @@ class MultiHeadAttention(nn.Module):
         d_model: int,
         num_heads: int
     ):
-        super(MultiHeadAttention).__init__()
+        super(MultiHeadAttention, self).__init__()
         self.d_model: int = d_model
         self.num_heads: int = num_heads
         
@@ -51,10 +52,10 @@ class MultiHeadAttention(nn.Module):
             V,
             "num_batch seq_len (num_heads d_v) -> num_batch num_heads seq_len d_v",
             num_heads=self.num_heads,
-            d_k = self.d_v
+            d_v = self.d_v
         )
         energy = torch.matmul(Q, K_T) # (num_batch, num_heads, seq_len, seq_len)
-        scaled_energy = energy / torch.sqrt(self.d_model)
+        scaled_energy = energy / math.sqrt(self.d_model)
         
         if mask is not None:
             scaled_energy = torch.masked_fill(
@@ -69,7 +70,7 @@ class MultiHeadAttention(nn.Module):
             attention_value,
             "num_batch num_heads seq_len d_v -> num_batch seq_len (num_heads d_v)",
             num_heads=self.num_heads,
-            d_k = self.d_v
+            d_v = self.d_v
         )  # (num_batch, seq_len, d_model)
         return self.mat_out(attention_value)
     

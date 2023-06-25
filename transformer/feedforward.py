@@ -7,7 +7,7 @@ class FeedForwardNetwork(nn.Module):
         d_model: int,
         d_ff: int
     ):
-        super(FeedForwardNetwork).__init__()
+        super(FeedForwardNetwork, self).__init__()
         self.d_model = d_model,
         self.d_ff = d_ff
         

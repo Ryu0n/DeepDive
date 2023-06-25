@@ -8,7 +8,7 @@ class PositionalEncoding(nn.Module):
         max_length: int,
         d_model: int
     ):
-        super(PositionalEncoding).__init__()
+        super(PositionalEncoding, self).__init__()
         self.encoding = torch.zeros(
             size=(
                 max_length,
@@ -17,7 +17,7 @@ class PositionalEncoding(nn.Module):
         )
         
         pos = torch.arange(
-            start=1,
+            start=0,
             end=max_length
         ).unsqueeze(dim=1)  # (max_len, 1)
         _2i = torch.arange(
