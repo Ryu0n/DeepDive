@@ -3,13 +3,13 @@ import torch.nn as nn
 from einops import rearrange
 
 
-class MultiHeadSelfAttention(nn.Module):
+class MultiHeadAttention(nn.Module):
     def __init__(
         self,
         d_model: int,
         num_heads: int
     ):
-        super(MultiHeadSelfAttention).__init__()
+        super(MultiHeadAttention).__init__()
         self.d_model: int = d_model
         self.num_heads: int = num_heads
         

@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from positional_encoding import PositionalEncoding
-from attention import MultiHeadSelfAttention
+from attention import MultiHeadAttention
 from feedforward import FeedForwardNetwork
 
 
@@ -13,7 +13,7 @@ class EncoderBlock(nn.Module):
         d_ff: int
     ):
         super(EncoderBlock).__init__()
-        self.self_attention = MultiHeadSelfAttention(
+        self.self_attention = MultiHeadAttention(
             d_model=d_model,
             num_heads=num_heads
         )
@@ -75,7 +75,7 @@ class Encoder(nn.Module):
         ]
     
     
-    def forward(self, x):
+    def forward(self, x, mask=None):
         """
         x : (num_batch, seq_len)
         """
@@ -86,5 +86,5 @@ class Encoder(nn.Module):
         
         out = x
         for encoder_block in self.encoder_blocks:
-            out = encoder_block(out)
+            out = encoder_block(out, mask)
         return out

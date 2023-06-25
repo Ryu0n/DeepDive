@@ -1,6 +1,6 @@
 import torch.nn as nn
 from positional_encoding import PositionalEncoding
-from attention import MultiHeadSelfAttention
+from attention import MultiHeadAttention
 from feedforward import FeedForwardNetwork
 
 
@@ -12,13 +12,18 @@ class DecoderBlock(nn.Module):
         d_ff: int
     ):
         super(DecoderBlock).__init__()
-        self.masked_self_attention = MultiHeadSelfAttention(
+        self.masked_self_attention = MultiHeadAttention(
             d_model=d_model,
             num_heads=num_heads
         )
         self.layer_norm1 = nn.LayerNorm()
-        self.cross_attention = None
+        
+        self.cross_attention = MultiHeadAttention(
+            d_model=d_model,
+            num_heads=num_heads
+        )
         self.layer_norm2 = nn.LayerNorm()
+        
         self.feed_forward = FeedForwardNetwork(
             d_model=d_model,
             d_ff=d_ff
@@ -26,8 +31,34 @@ class DecoderBlock(nn.Module):
         self.layer_norm3 = nn.LayerNorm()
         
     
-    def forward(self, x, mask=None):
-        pass
+    def forward(self, x, enc_out=None, self_mask=None, cross_mask=None):
+        _x = self.layer_norm1(
+            self.masked_self_attention(
+                query=x,
+                key=x,
+                value=x,
+                mask=self_mask
+            )
+        )
+        x = _x + x  # residual connection
+        
+        if enc_out is not None:
+            _x = self.layer_norm2(
+                self.cross_attention(
+                    query=x,
+                    key=enc_out,
+                    value=enc_out,
+                    mask=cross_mask
+                )
+            )
+            x = _x + x  # residual connection
+        
+        _x = self.layer_norm3(
+            self.feed_forward(
+                x
+            )
+        )
+        x = _x + x  # residual connection
         
 
 class Decoder(nn.Module):
@@ -53,7 +84,28 @@ class Decoder(nn.Module):
             DecoderBlock()
             for _ in range(self.num_blocks)
         ]
+        self.linear = nn.Linear(
+            in_features=self.d_model,
+            out_features=self.vocab_size
+        )
         
     
-    def forward(self):
-        pass
+    def forward(self, x, enc_out=None, self_mask=None, cross_mask=None):
+        """
+        x : (num_batch, seq_len)
+        """
+        
+        embedding = self.embedding(x)  # (num_batch, seq_len, d_model)
+        positional_encoding = self.positional_encoding(embedding)
+        x = embedding + positional_encoding
+        
+        out = x
+        for decoder_block in self.decoder_blocks:
+            out = decoder_block(
+                out, 
+                enc_out,
+                self_mask,
+                cross_mask,
+            )
+        out = self.linear(out)
+        return out
