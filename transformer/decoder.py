@@ -59,6 +59,7 @@ class DecoderBlock(nn.Module):
             )
         )
         x = _x + x  # residual connection
+        return x
         
 
 class Decoder(nn.Module):
@@ -81,7 +82,11 @@ class Decoder(nn.Module):
             d_model=self.d_model
         )
         self.decoder_blocks = [
-            DecoderBlock()
+            DecoderBlock(
+                d_model=self.d_model,
+                num_heads=self.num_heads,
+                d_ff=self.d_ff
+            )
             for _ in range(self.num_blocks)
         ]
         self.linear = nn.Linear(
@@ -90,7 +95,7 @@ class Decoder(nn.Module):
         )
         
     
-    def forward(self, x, enc_out=None, self_mask=None, cross_mask=None):
+    def forward(self, x, enc_out=None, dst_mask=None, src_dst_mask=None):
         """
         x : (num_batch, seq_len)
         """
@@ -104,8 +109,8 @@ class Decoder(nn.Module):
             out = decoder_block(
                 out, 
                 enc_out,
-                self_mask,
-                cross_mask,
+                dst_mask,
+                src_dst_mask,
             )
         out = self.linear(out)
         return out

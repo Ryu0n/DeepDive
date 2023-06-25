@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 from positional_encoding import PositionalEncoding
 from attention import MultiHeadAttention
@@ -75,7 +74,7 @@ class Encoder(nn.Module):
         ]
     
     
-    def forward(self, x, mask=None):
+    def forward(self, x, src_mask=None):
         """
         x : (num_batch, seq_len)
         """
@@ -86,5 +85,5 @@ class Encoder(nn.Module):
         
         out = x
         for encoder_block in self.encoder_blocks:
-            out = encoder_block(out, mask)
+            out = encoder_block(out, src_mask)
         return out
