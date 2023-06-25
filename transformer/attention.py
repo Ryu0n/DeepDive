@@ -57,8 +57,8 @@ class MultiHeadSelfAttention(nn.Module):
         scaled_energy = energy / torch.sqrt(self.d_model)
         
         if mask is not None:
-            attention_energy = torch.masked_fill(
-                input=attention_energy,
+            scaled_energy = torch.masked_fill(
+                input=scaled_energy,
                 mask=(mask==0),
                 value=-1e+4
             )
