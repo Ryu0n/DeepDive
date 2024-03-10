@@ -1,0 +1,10 @@
+transformers
+numpy
+fastapi
+uvicorn[standard]
+matplotlib
+scikit-learn
+aiohttp
+ipykernel
+pytz
+html-text

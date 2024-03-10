@@ -1,0 +1,10 @@
+.idea
+data
+.DS_Store
+__pycache__
+*.pt
+셀렉트스타*
+select_star*
+final_1420.zip
+model.tar.gz
+final_*
