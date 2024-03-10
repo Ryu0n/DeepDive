@@ -1,0 +1,62 @@
+version: "3.7"
+services:
+  quality-server:
+    build:
+      context: .
+    image: registry.mysterico.com:30126/model-server/category-classifier-renew:0.0.1
+    ports:
+      - 9000:8080
+    command:
+      ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+    environment:
+      MODEL_WEIGHT: "./models/quality-20000.pt"
+      MODEL_THRESHOLD: 0.55
+      MODEL_CATEGORY: "quality"
+    volumes:
+      - ./models:/app/models
+    
+  price-server:
+    build:
+      context: .
+    image: registry.mysterico.com:30126/model-server/category-classifier-renew:0.0.1
+    ports:
+      - 9001:8080
+    command:
+      ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+    environment:
+      MODEL_WEIGHT: "./models/price-20000.pt"
+      MODEL_THRESHOLD: 0.55
+      MODEL_CATEGORY: "price"
+    volumes:
+      - ./models:/app/models
+    
+  design-server:
+    build:
+      context: .
+    image: registry.mysterico.com:30126/model-server/category-classifier-renew:0.0.1
+    ports:
+      - 9002:8080
+    command:
+      ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+    environment:
+      MODEL_WEIGHT: "./models/design-20000.pt"
+      MODEL_THRESHOLD: 0.55
+      MODEL_CATEGORY: "design"
+    volumes:
+      - ./models:/app/models
+
+    
+  service-server:
+    build:
+      context: .
+    image: registry.mysterico.com:30126/model-server/category-classifier-renew:0.0.1
+    ports:
+      - 9003:8080
+    command:
+      ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+    environment:
+      MODEL_WEIGHT: "./models/service-20000.pt"
+      MODEL_THRESHOLD: 0.55
+      MODEL_CATEGORY: "service"
+    volumes:
+      - ./models:/app/models

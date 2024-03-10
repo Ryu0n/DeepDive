@@ -1,0 +1,10 @@
+setfit
+datasets
+fastapi
+aiohttp
+ipykernel
+uvicorn[standard]
+soynlp==0.0.493
+html-text==0.5.2
+kiwipiepy==0.12.0
+wandb
