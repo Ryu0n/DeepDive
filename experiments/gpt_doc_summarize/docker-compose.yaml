@@ -1,0 +1,16 @@
+version: "3.7"
+services:
+  server:
+    build:
+      context: .
+    image: .
+    ports:
+      - 8080:8080
+    command:
+      ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+    environment:
+      OPENAI_API_KEY: 1
+      REDIS_HOST: localhost
+      REDIS_PORT: 1
+      REDIS_DB_NUM: 1
+      REDIS_EXPIRED_SECOND: 1209600
