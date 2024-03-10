@@ -1,0 +1,7 @@
+torch
+numpy
+einops
+ipykernel
+torchvision
+tqdm
+matplotlib
